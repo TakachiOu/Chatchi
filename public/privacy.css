@@ -1,0 +1,158 @@
+/* --- General Setup & Variables --- */
+:root {
+    --bg-color: #0d0f18;
+    --primary-color: #1b1e2f;
+    --accent-color: #8a42ff;
+    --accent-dark: #6b21d6;
+    --text-color: #e0e0e0;
+    --text-muted: #818896;
+    --border-color: rgba(255, 255, 255, 0.1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Tajawal', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.8;
+    overflow-x: hidden;
+    padding-top: env(safe-area-inset-top); 
+}
+
+/* --- Background Blurs (نفس تأثير الرئيسية) --- */
+.background-blurs { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
+.blur-orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.3; animation-duration: 20s; animation-iteration-count: infinite; animation-direction: alternate; }
+#orb1 { width: 400px; height: 400px; background: #471a8a; top: -10%; left: 10%; animation-name: moveOrb1; }
+#orb2 { width: 350px; height: 350px; background: var(--accent-color); bottom: -10%; right: -10%; animation-name: moveOrb2; }
+@keyframes moveOrb1 { from { transform: translate(0, 0); } to { transform: translate(100px, 50px); } }
+@keyframes moveOrb2 { from { transform: translate(0, 0); } to { transform: translate(-80px, -60px); } }
+
+/* --- Header & Navigation --- */
+header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 20px 8%; 
+    flex-wrap: wrap; 
+    gap: 15px; 
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(13, 15, 24, 0.8);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.logo { font-size: 2rem; font-weight: 700; text-shadow: 0 0 10px rgba(138, 66, 255, 0.3); }
+.logo span { color: var(--accent-color); }
+
+.header-nav { display: flex; gap: 15px; align-items: center; }
+
+/* أزرار التنقل واللغة */
+.nav-link-btn, .lang-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+.nav-link-btn:hover, .lang-toggle-btn:hover {
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+    border-color: var(--accent-color);
+    box-shadow: 0 5px 15px rgba(138, 66, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+/* --- Main Content (Policy Sections) --- */
+.container { padding: 40px 8%; max-width: 1000px; margin: 0 auto; min-height: calc(100vh - 160px); }
+
+.page-title { 
+    font-size: 3rem; 
+    text-align: center; 
+    margin-bottom: 5px; 
+    background: linear-gradient(to right, #fff, var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.last-updated { 
+    text-align: center; 
+    color: var(--text-muted); 
+    font-size: 0.9rem; 
+    margin-bottom: 50px; 
+}
+
+/* تأثير الزجاج على الفقرات */
+.policy-block {
+    background: rgba(27, 30, 47, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 35px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.policy-block:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(138, 66, 255, 0.15);
+    border-color: rgba(138, 66, 255, 0.3);
+}
+
+.policy-block h2 {
+    font-size: 1.8rem;
+    color: white;
+    margin-bottom: 15px;
+    display: inline-block;
+    position: relative;
+}
+.policy-block h2::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    right: 0;
+    width: 50%;
+    height: 3px;
+    background: var(--accent-color);
+    border-radius: 5px;
+}
+html[dir="ltr"] .policy-block h2::after { right: auto; left: 0; }
+
+.policy-block p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* --- Footer --- */
+.site-footer { 
+    text-align: center; 
+    padding: 30px 20px; 
+    border-top: 1px solid var(--border-color);
+    background: rgba(13, 15, 24, 0.8);
+}
+.footer-copyright { color: var(--text-muted); }
+
+/* --- Responsive Media Queries --- */
+@media (max-width: 768px) {
+    header { padding: 15px 5%; justify-content: center; flex-direction: column; }
+    .header-nav { width: 100%; justify-content: space-between; margin-top: 10px; }
+    .container { padding: 30px 5%; }
+    .page-title { font-size: 2.2rem; }
+    .policy-block { padding: 25px; }
+    .policy-block h2 { font-size: 1.5rem; }
+}
+@media (max-width: 480px) {
+    .nav-link-btn, .lang-toggle-btn { padding: 8px 15px; font-size: 0.9rem; }
+    .page-title { font-size: 1.8rem; }
+    .policy-block { padding: 20px; border-radius: 15px; }
+    .policy-block p { font-size: 1rem; }
+}

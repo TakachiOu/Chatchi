@@ -1,42 +1,51 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // =================================
-    // 1. التهيئة والمحددات
+    // 1. التهيئة والمحددات (خفيفة وحديثة)
     // =================================
-    const socket = io("https://chatchi.onrender.com");
-    socket.on('updateOnlineUsers', (count) => {
-        const counter = document.getElementById('onlineCount');
-        if (counter) counter.textContent = count;
+    const socket = io("https://chatchi.onrender.com", {
+        transports: ['websocket'], // تسريع الاتصال بإجبار استخدام WebSockets
+        upgrade: false
     });
+
+    // عناصر الـ DOM مخزنة مسبقاً لتسريع الوصول إليها
+    const DOM = {
+        onlineCount: document.getElementById('onlineCount'),
+        mainView: document.getElementById('main-view'),
+        chatView: document.getElementById('chat-view'),
+        tagsInput: document.getElementById('tags-input'),
+        tagsArea: document.getElementById('tags-area'),
+        ctaButton: document.querySelector('.cta-button'),
+        ctaButtonText: document.querySelector('.cta-button span'),
+        chatStatus: document.querySelector('.chat-status'),
+        messagesArea: document.querySelector('.messages-area'),
+        inputField: document.getElementById('chat-input-field'),
+        sendButton: document.getElementById('send-button'),
+        leaveButton: document.getElementById('leave-button'),
+        confirmModal: document.getElementById('confirm-modal'),
+        confirmYesBtn: document.getElementById('confirm-yes-btn'),
+        confirmNoBtn: document.getElementById('confirm-no-btn'),
+        langToggleButton: document.getElementById('lang-toggle')
+    };
+
     let currentRoom = '';
     let typingTimer;
     const typingTimeout = 1500;
     const tags = new Set();
+    let currentLang = 'ar';
+    let dotAnimationInterval;
+    let autoRematchTimer; // مؤقت البحث التلقائي الجديد
 
     // --- قائمة الكلمات الممنوعة ---
     const forbiddenWords = [
         'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 
         'dick', 'fack', 'زك', 'ديوث','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' 
     ];
-
-    // محددات العناصر
-    const mainView = document.getElementById('main-view');
-    const chatView = document.getElementById('chat-view');
-    const tagsInput = document.getElementById('tags-input');
-    const tagsArea = document.getElementById('tags-area');
-    const ctaButton = document.querySelector('.cta-button');
-    const chatStatus = document.querySelector('.chat-status');
-    const messagesArea = document.querySelector('.messages-area');
-    const inputField = document.getElementById('chat-input-field');
-    const sendButton = document.getElementById('send-button');
-    const leaveButton = document.getElementById('leave-button');
-    const confirmModal = document.getElementById('confirm-modal');
-    const confirmYesBtn = document.getElementById('confirm-yes-btn');
-    const confirmNoBtn = document.getElementById('confirm-no-btn');
-    const langToggleButton = document.getElementById('lang-toggle');
+    // إنشاء تعبير نمطي (Regex) مسبقاً لتسريع عملية الفلترة
+    const forbiddenRegex = new RegExp(forbiddenWords.join('|'), 'gi');
 
     // =================================
-    // 2. قاموس الترجمة (تمت إضافة مفاتيح جديدة)
+    // 2. قاموس الترجمة
     // =================================
     const translations = {
         ar: {
@@ -65,8 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMatchFoundTag: 'تم الاتصال بشريك يشاركك الـ Tag: ',
             statusMatchFoundRandom: 'تم الاتصال بغريب (لم نجد نفس الـ Tag)',
             partnerTyping: 'شريكك يكتب الآن...',
-            partnerLeft: 'لقد غادر الغريب المحادثة.',
-            partnerSuddenLeft: 'انقطع الاتصال مع الغريب فجأة.',
+            partnerLeft: 'لقد غادر الغريب المحادثة، جاري البحث عن بديل...',
+            partnerSuddenLeft: 'انقطع الاتصال مع الغريب فجأة، جاري البحث عن بديل...',
             partnerAway: 'الشريك في الخلفية (Away)',
             confirmLeaveTitle: 'هل أنت متأكد؟',
             confirmLeaveText: 'هل تريد حقاً مغادرة المحادثة؟',
@@ -99,8 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMatchFoundTag: 'Connected with a partner sharing Tag: ',
             statusMatchFoundRandom: 'Connected with a stranger',
             partnerTyping: 'Partner is typing...',
-            partnerLeft: 'The stranger has left the conversation.',
-            partnerSuddenLeft: 'Stranger lost connection suddenly.',
+            partnerLeft: 'The stranger has left. Finding a new partner...',
+            partnerSuddenLeft: 'Stranger lost connection. Finding a new partner...',
             partnerAway: 'Partner is away (Background)',
             confirmLeaveTitle: 'Are you sure?',
             confirmLeaveText: 'Do you really want to leave the conversation?',
@@ -108,10 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmNo: 'No, Stay'
         }
     };
-    let currentLang = 'ar';
 
     // =================================
-    // 3. الوظائف المساعدة
+    // 3. الوظائف المساعدة وتحديث واجهة المستخدم (مُحسّنة)
     // =================================
 
     function applyTranslations() {
@@ -129,88 +137,90 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-
-        // تحديث حالة الشات بناءً على اللغة
         updateChatStatusUI();
     }
 
     function updateChatStatusUI() {
-        const matchType = chatStatus.dataset.matchType;
+        const matchType = DOM.chatStatus.dataset.matchType;
         if (matchType === 'tag') {
-            chatStatus.textContent = translations[currentLang].statusMatchFoundTag + chatStatus.dataset.matchedTag;
+            DOM.chatStatus.textContent = translations[currentLang].statusMatchFoundTag + DOM.chatStatus.dataset.matchedTag;
         } else if (matchType === 'random') {
-            chatStatus.textContent = translations[currentLang].statusMatchFoundRandom;
+            DOM.chatStatus.textContent = translations[currentLang].statusMatchFoundRandom;
         } else {
-            const currentStatusKey = chatStatus.dataset.keyStatus;
+            const currentStatusKey = DOM.chatStatus.dataset.keyStatus;
             if (currentStatusKey && translations[currentLang][currentStatusKey]) {
-                chatStatus.textContent = translations[currentLang][currentStatusKey];
+                DOM.chatStatus.textContent = translations[currentLang][currentStatusKey];
             }
         }
     }
 
+    // فلترة سريعة للكلمات
     function filterLocalMessage(text) {
-        let filteredText = text;
-        forbiddenWords.forEach(word => {
-            const regex = new RegExp(word, 'gi');
-            filteredText = filteredText.replace(regex, '*'.repeat(word.length));
-        });
-        return filteredText;
+        return text.replace(forbiddenRegex, match => '*'.repeat(match.length));
     }
 
+    // عرض الـ Tags بكفاءة عبر DocumentFragment
     function renderTags() {
-        tagsArea.innerHTML = '';
+        const fragment = document.createDocumentFragment();
         tags.forEach(tag => {
             const tagElement = document.createElement('div');
-            tagElement.classList.add('tag-item');
+            tagElement.className = 'tag-item';
             tagElement.innerHTML = `${tag}<span class="close-btn" data-tag-value="${tag}">&times;</span>`;
-            tagsArea.appendChild(tagElement);
+            fragment.appendChild(tagElement);
         });
+        DOM.tagsArea.innerHTML = '';
+        DOM.tagsArea.appendChild(fragment);
     }
 
+    // عرض الرسائل بتمرير سلس (Smooth Scroll)
     function displayMessage(message, type) {
         const bubble = document.createElement('div');
-        bubble.classList.add('message-bubble', type);
+        bubble.className = `message-bubble ${type}`;
         bubble.textContent = message;
-        messagesArea.appendChild(bubble);
-        messagesArea.scrollTop = messagesArea.scrollHeight;
+        DOM.messagesArea.appendChild(bubble);
+        
+        // التمرير السلس للأسفل
+        requestAnimationFrame(() => {
+            DOM.messagesArea.scrollTo({
+                top: DOM.messagesArea.scrollHeight,
+                behavior: 'smooth'
+            });
+        });
     }
 
     function sendMessage() {
-        const rawMessage = inputField.value.trim();
+        const rawMessage = DOM.inputField.value.trim();
         if (rawMessage && currentRoom) {
             socket.emit('chatMessage', { room: currentRoom, message: rawMessage });
-            const cleanMessage = filterLocalMessage(rawMessage);
-            displayMessage(cleanMessage, 'my-message');
-            inputField.value = '';
-            inputField.focus();
+            displayMessage(filterLocalMessage(rawMessage), 'my-message');
+            DOM.inputField.value = '';
+            DOM.inputField.focus();
         }
     }
 
     function resetChatState() {
-        chatView.classList.add('hidden');
-        mainView.classList.remove('hidden');
-        ctaButton.querySelector('span').textContent = translations[currentLang].ctaButton;
-        ctaButton.disabled = false;
-        messagesArea.innerHTML = '';
-        inputField.disabled = true;
-        sendButton.disabled = true;
-        leaveButton.disabled = true;
+        clearTimeout(autoRematchTimer);
+        DOM.chatView.classList.add('hidden');
+        DOM.mainView.classList.remove('hidden');
+        DOM.ctaButtonText.textContent = translations[currentLang].ctaButton;
+        DOM.ctaButton.disabled = false;
+        DOM.messagesArea.innerHTML = '';
+        DOM.inputField.disabled = true;
+        DOM.sendButton.disabled = true;
+        DOM.leaveButton.disabled = true;
         currentRoom = '';
-        chatStatus.textContent = '';
-        chatStatus.dataset.keyStatus = '';
-        chatStatus.dataset.matchType = '';
-        chatStatus.dataset.matchedTag = '';
+        DOM.chatStatus.textContent = '';
+        DOM.chatStatus.dataset.keyStatus = '';
+        DOM.chatStatus.dataset.matchType = '';
+        DOM.chatStatus.dataset.matchedTag = '';
     }
-
-    let dotAnimationInterval;
 
     function startDotAnimation() {
         let dotCount = 0;
         stopDotAnimation();
         dotAnimationInterval = setInterval(() => {
             dotCount = (dotCount + 1) % 4;
-            const dots = '.'.repeat(dotCount);
-            chatStatus.textContent = translations[currentLang].statusSearching + dots;
+            DOM.chatStatus.textContent = translations[currentLang].statusSearching + '.'.repeat(dotCount);
         }, 500);
     }
 
@@ -225,42 +235,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. مستمعو الأحداث (User Actions)
     // =================================
 
-    langToggleButton.addEventListener('click', () => {
+    DOM.langToggleButton.addEventListener('click', () => {
         currentLang = currentLang === 'ar' ? 'en' : 'ar';
         applyTranslations();
     });
 
-    tagsInput.addEventListener('keyup', (event) => {
+    DOM.tagsInput.addEventListener('keyup', (event) => {
         if (event.key === 'Enter') {
-            const newTag = tagsInput.value.trim().toLowerCase();
+            const newTag = DOM.tagsInput.value.trim().toLowerCase();
             if (newTag && !tags.has(newTag)) {
                 tags.add(newTag);
                 renderTags();
             }
-            tagsInput.value = '';
+            DOM.tagsInput.value = '';
         }
     });
 
-    tagsArea.addEventListener('click', (event) => {
+    DOM.tagsArea.addEventListener('click', (event) => {
         if (event.target.classList.contains('close-btn')) {
-            const tagToDelete = event.target.getAttribute('data-tag-value');
-            tags.delete(tagToDelete);
+            tags.delete(event.target.getAttribute('data-tag-value'));
             renderTags();
         }
     });
 
-    ctaButton.addEventListener('click', () => {
-        ctaButton.querySelector('span').textContent = translations[currentLang].searchingButton;
-        ctaButton.disabled = true;
+    // دالة بدء البحث مجمعة لسهولة إعادة الاستخدام
+    function startSearching() {
+        clearTimeout(autoRematchTimer);
+        DOM.messagesArea.innerHTML = ''; // تنظيف الشات القديم
+        DOM.ctaButtonText.textContent = translations[currentLang].searchingButton;
+        DOM.ctaButton.disabled = true;
         socket.emit('findPartner', Array.from(tags));
-    });
+    }
 
-    sendButton.addEventListener('click', sendMessage);
-    inputField.addEventListener('keyup', (event) => { if (event.key === 'Enter') sendMessage(); });
+    DOM.ctaButton.addEventListener('click', startSearching);
 
-    inputField.addEventListener('input', () => {
+    DOM.sendButton.addEventListener('click', sendMessage);
+    DOM.inputField.addEventListener('keyup', (event) => { if (event.key === 'Enter') sendMessage(); });
+
+    DOM.inputField.addEventListener('input', () => {
         clearTimeout(typingTimer);
-        if (inputField.value.trim() !== '') {
+        if (DOM.inputField.value.trim() !== '') {
             socket.emit('userTyping', { room: currentRoom });
             typingTimer = setTimeout(() => {
                 socket.emit('userStoppedTyping', { room: currentRoom });
@@ -270,130 +284,121 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    leaveButton.addEventListener('click', () => {
-        confirmModal.classList.remove('hidden');
-    });
+    DOM.leaveButton.addEventListener('click', () => DOM.confirmModal.classList.remove('hidden'));
+    DOM.confirmNoBtn.addEventListener('click', () => DOM.confirmModal.classList.add('hidden'));
 
-    confirmNoBtn.addEventListener('click', () => {
-        confirmModal.classList.add('hidden');
-    });
-
-    confirmYesBtn.addEventListener('click', () => {
+    DOM.confirmYesBtn.addEventListener('click', () => {
         stopDotAnimation();
+        clearTimeout(autoRematchTimer);
         if (currentRoom) {
             socket.emit('leaveRoom', currentRoom);
         } else {
             socket.emit('cancelSearch');
         }
         resetChatState();
-        confirmModal.classList.add('hidden');
+        DOM.confirmModal.classList.add('hidden');
     });
 
     // =================================
     // 5. مستمعو أحداث الخادم (Socket Events)
     // =================================
 
+    socket.on('updateOnlineUsers', (count) => {
+        if (DOM.onlineCount) DOM.onlineCount.textContent = count;
+    });
+
     socket.on('waitingForPartner', () => {
-        mainView.classList.add('hidden');
-        chatView.classList.remove('hidden');
-        chatStatus.textContent = translations[currentLang].statusSearching;
-        chatStatus.dataset.keyStatus = 'statusSearching';
-        chatStatus.dataset.matchType = '';
-        leaveButton.disabled = false;
+        DOM.mainView.classList.add('hidden');
+        DOM.chatView.classList.remove('hidden');
+        DOM.chatStatus.textContent = translations[currentLang].statusSearching;
+        DOM.chatStatus.dataset.keyStatus = 'statusSearching';
+        DOM.chatStatus.dataset.matchType = '';
+        DOM.leaveButton.disabled = false;
         startDotAnimation();
     });
 
     socket.on('matchFound', (data) => {
         stopDotAnimation();
+        clearTimeout(autoRematchTimer);
         currentRoom = data.room;
-        mainView.classList.add('hidden');
-        chatView.classList.remove('hidden');
+        DOM.mainView.classList.add('hidden');
+        DOM.chatView.classList.remove('hidden');
         
         if (data.matchedTag) {
-            chatStatus.textContent = translations[currentLang].statusMatchFoundTag + data.matchedTag;
-            chatStatus.dataset.matchType = 'tag';
-            chatStatus.dataset.matchedTag = data.matchedTag;
+            DOM.chatStatus.textContent = translations[currentLang].statusMatchFoundTag + data.matchedTag;
+            DOM.chatStatus.dataset.matchType = 'tag';
+            DOM.chatStatus.dataset.matchedTag = data.matchedTag;
         } else {
-            chatStatus.textContent = translations[currentLang].statusMatchFoundRandom;
-            chatStatus.dataset.matchType = 'random';
-            chatStatus.dataset.matchedTag = '';
+            DOM.chatStatus.textContent = translations[currentLang].statusMatchFoundRandom;
+            DOM.chatStatus.dataset.matchType = 'random';
+            DOM.chatStatus.dataset.matchedTag = '';
         }
 
-        inputField.disabled = false;
-        sendButton.disabled = false;
-        leaveButton.disabled = false;
-        inputField.focus();
+        DOM.inputField.disabled = false;
+        DOM.sendButton.disabled = false;
+        DOM.leaveButton.disabled = false;
+        DOM.inputField.focus();
     });
 
-    // معالجة مغادرة الطرف الآخر (عادية أو مفاجئة)
+    // التعديل الأهم: الانتقال التلقائي عند مغادرة الشريك
     socket.on('partnerLeft', (data) => {
         stopDotAnimation();
+        currentRoom = ''; // تفريغ الغرفة الحالية
+        
         const reasonKey = (data && data.reason === 'sudden_disconnect') ? 'partnerSuddenLeft' : 'partnerLeft';
         displayMessage(translations[currentLang][reasonKey], 'system-message');
         
-        inputField.disabled = true;
-        sendButton.disabled = true;
-        chatStatus.textContent = translations[currentLang][reasonKey];
-        chatStatus.dataset.keyStatus = reasonKey;
-        chatStatus.dataset.matchType = '';
+        DOM.inputField.disabled = true;
+        DOM.sendButton.disabled = true;
+        DOM.chatStatus.textContent = translations[currentLang][reasonKey];
+        DOM.chatStatus.dataset.keyStatus = reasonKey;
+        DOM.chatStatus.dataset.matchType = '';
+
+        // الانتظار ثانيتين ثم بدء البحث عن شريك جديد تلقائياً
+        autoRematchTimer = setTimeout(() => {
+            startSearching();
+        }, 2000); 
     });
 
-    // معالجة دخول الشريك للخلفية
     socket.on('partnerAppStateChanged', (state) => {
         if (state === 'inactive') {
-            chatStatus.textContent = translations[currentLang].partnerAway;
+            DOM.chatStatus.textContent = translations[currentLang].partnerAway;
         } else {
-            updateChatStatusUI(); // العودة للحالة الأصلية (التاغ أو عشوائي)
+            updateChatStatusUI();
         }
     });
 
-    socket.on('partnerTyping', () => {
-        chatStatus.textContent = translations[currentLang].partnerTyping;
-    });
+    socket.on('partnerTyping', () => DOM.chatStatus.textContent = translations[currentLang].partnerTyping);
+    socket.on('partnerStoppedTyping', updateChatStatusUI);
 
-    socket.on('partnerStoppedTyping', () => {
-        updateChatStatusUI();
-    });
-
-    socket.on('chatMessage', (message) => {
-        const cleanMessage = filterLocalMessage(message);
-        displayMessage(cleanMessage, 'stranger-message');
-    });
+    socket.on('chatMessage', (message) => displayMessage(filterLocalMessage(message), 'stranger-message'));
 
     socket.on('syncMessages', (messages) => {
-        messages.forEach(msg => {
-            // نفلترو الرسالة ونعرضوها كأنها رسالة غريب
-            const cleanMessage = filterLocalMessage(msg.message);
-            displayMessage(cleanMessage, 'stranger-message');
-        });
+        messages.forEach(msg => displayMessage(filterLocalMessage(msg.message), 'stranger-message'));
     });
 
     // =================================
-    // 6. تكامل Capacitor (أهم جزء)
+    // 6. تكامل Capacitor 
     // =================================
     if (window.Capacitor) {
         const { App } = Capacitor.Plugins;
 
-        // مستمع لزر الرجوع
         App.addListener('backButton', () => {
-            const isModalVisible = !confirmModal.classList.contains('hidden');
-            const isChatViewVisible = !chatView.classList.contains('hidden');
+            const isModalVisible = !DOM.confirmModal.classList.contains('hidden');
+            const isChatViewVisible = !DOM.chatView.classList.contains('hidden');
             if (isModalVisible) {
-                confirmModal.classList.add('hidden');
+                DOM.confirmModal.classList.add('hidden');
             } else if (isChatViewVisible) {
-                confirmModal.classList.remove('hidden');
+                DOM.confirmModal.classList.remove('hidden');
             } else {
                 App.exitApp();
             }
         });
 
-        // مستمع لحالة التطبيق (Background/Foreground) - الحل رقم 2
-App.addListener('appStateChange', ({ isActive }) => {
+        App.addListener('appStateChange', ({ isActive }) => {
             if (currentRoom) {
                 socket.emit('updateAppState', { state: isActive ? 'active' : 'inactive' });
-                if (isActive) {
-                    socket.emit('requestSync');
-                } 
+                if (isActive) socket.emit('requestSync');
             } 
         }); 
     } 
