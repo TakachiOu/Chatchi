@@ -1,8 +1,12 @@
+// --- public/privacy/privacy.js ---
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // محددات العناصر
     const langToggleButton = document.getElementById('lang-toggle');
-    let currentLang = 'ar'; // اللغة الافتراضية
+    
+    // استرجاع اللغة المحفوظة لكي تتطابق مع الصفحة الرئيسية
+    let currentLang = sessionStorage.getItem('chatchi_lang') || 'ar'; 
 
     // =================================
     // قاموس الترجمة لصفحة الخصوصية
@@ -63,6 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. تحديث لغة واتجاه المستند
         document.documentElement.lang = currentLang;
         document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+
+        // حفظ اللغة لكي لا تتغير عند العودة للرئيسية
+        sessionStorage.setItem('chatchi_lang', currentLang);
 
         // 2. البحث عن كل العناصر التي تحمل data-key وتحديثها
         const elements = document.querySelectorAll('[data-key]');
