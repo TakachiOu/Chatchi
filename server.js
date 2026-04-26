@@ -9,20 +9,28 @@ const nodemailer = require('nodemailer');
 const app = express();
 app.use(cors());
 
-// --- الحل الجذري لمشكلة ملفات الـ CSS والـ JS ---
-// 1. السماح بالوصول للملفات في المجلد الرئيسي public
+// ==========================================
+// 1. السماح بقراءة الملفات الثابتة (CSS / JS / Images)
+// ==========================================
 app.use(express.static(path.join(__dirname, 'public')));
-
-// 2. توجيه المسارات الفرعية مباشرة لمجلداتها لتفادي أخطاء 404 و MIME type
-app.use('/index', express.static(path.join(__dirname, 'public', 'index')));
-app.use('/chat', express.static(path.join(__dirname, 'public', 'chat')));
-app.use('/privacy', express.static(path.join(__dirname, 'public', 'privacy')));
-// إذا كان مجلد assets خارج public، نضمن وصول الصور والأيقونات
 app.use('/assets', express.static(path.join(__dirname, 'assets'))); 
 
-// [إضافة مهمة]: توجيه المسار الرئيسي إلى ملف index.html داخل مجلده الجديد
+// ==========================================
+// 2. الروابط الاحترافية النظيفة (Clean URLs)
+// ==========================================
+// توجيه المسار الرئيسي إلى الصفحة الرئيسية
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index', 'index.html'));
+});
+
+// توجيه مسار /chat إلى صفحة الدردشة
+app.get('/chat', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'chat', 'chat.html'));
+});
+
+// توجيه مسار /privacy إلى صفحة الخصوصية
+app.get('/privacy', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'privacy', 'privacy.html'));
 });
 
 const server = http.createServer(app);
@@ -45,7 +53,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// --- 1. إعدادات الفلترة والحماية ---
+// --- إعدادات الفلترة والحماية ---
 const forbiddenWords = [
     'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 
     'dick', 'fack', 'زك', 'ديوث','شرموطة',

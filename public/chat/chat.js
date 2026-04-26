@@ -153,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
         stopDotAnimation(); clearTimeout(autoRematchTimer);
         if (currentRoom) socket.emit('leaveRoom', currentRoom);
         else socket.emit('cancelSearch');
-        // العودة إلى الصفحة الرئيسية بدل إخفاء الشات
-        window.location.href = '../index/index.html'; 
+        // العودة إلى الصفحة الرئيسية بدل إخفاء الشات باستخدام الرابط النظيف
+        window.location.href = '/'; 
     };
 
     // 5. أحداث السيرفر (Socket)

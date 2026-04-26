@@ -127,8 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.startChatBtn.onclick = () => {
             // 1. نحفظ الـ Tags في الذاكرة المؤقتة لتقرأها صفحة الدردشة
             sessionStorage.setItem('chatchi_tags', JSON.stringify(Array.from(tags)));
-            // 2. الانتقال إلى صفحة الدردشة
-            window.location.href = '../chat/chat.html';
+            // 2. الانتقال إلى صفحة الدردشة باستخدام الرابط النظيف
+            window.location.href = '/chat';
         };
     }
 
