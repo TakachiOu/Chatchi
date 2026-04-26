@@ -9,8 +9,16 @@ const nodemailer = require('nodemailer');
 const app = express();
 app.use(cors());
 
-// تأكد أن ملفات الـ Front-end موجودة في مجلد public
-app.use(express.static('public'));
+// --- الحل الجذري لمشكلة ملفات الـ CSS والـ JS ---
+// 1. السماح بالوصول للملفات في المجلد الرئيسي public
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 2. توجيه المسارات الفرعية مباشرة لمجلداتها لتفادي أخطاء 404 و MIME type
+app.use('/index', express.static(path.join(__dirname, 'public', 'index')));
+app.use('/chat', express.static(path.join(__dirname, 'public', 'chat')));
+app.use('/privacy', express.static(path.join(__dirname, 'public', 'privacy')));
+// إذا كان مجلد assets خارج public، نضمن وصول الصور والأيقونات
+app.use('/assets', express.static(path.join(__dirname, 'assets'))); 
 
 // [إضافة مهمة]: توجيه المسار الرئيسي إلى ملف index.html داخل مجلده الجديد
 app.get('/', (req, res) => {
