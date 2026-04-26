@@ -14,22 +14,16 @@
   <meta property="og:url" content="https://chatchi.onrender.com/">
   <meta property="og:title" content="Chatchi – دردشة عشوائية ومجهولة مع غرباء">
   <meta property="og:description" content="مساحة آمنة للبوح وتبادل الأسرار مع أشخاص لا يعرفونك.">
-  <meta property="og:image" content="https://chatchi.onrender.com/icon.png">
+  <meta property="og:image" content="../icon.png">
 
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://chatchi.onrender.com/">
-  <meta property="twitter:title" content="Chatchi – دردشة عشوائية ومجهولة">
-  <meta property="twitter:description" content="تحدث مع المجهول بخصوصية تامة.">
-  <meta property="twitter:image" content="https://chatchi.onrender.com/icon.png">
-
-  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="icon" href="../icon.png" type="image/png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="index.css">
 
   <script type="application/ld+json">
   {
@@ -75,7 +69,7 @@
                     <input type="text" id="tags-input" data-key="tagsPlaceholder" placeholder="اكتب tag للدخول إلى دردشة مع من كتب نفس الـtag">
                 </div>
                 
-                <button class="cta-button">
+                <button id="start-chat-btn" class="cta-button">
                     <span data-key="ctaButton">ابحث عن شخص</span>
                     <i class="fa-solid fa-angles-right"></i>
                 </button>
@@ -116,7 +110,7 @@
             
             <div class="footer-bottom">
                 <div class="legal-links" style="margin-bottom: 15px;">
-                    <a href="privacy.html" data-key="privacyLink" style="color: var(--text-muted); text-decoration: none; font-weight: bold; transition: color 0.3s;">سياسة الخصوصية</a>
+                    <a href="../privacy/privacy.html" data-key="privacyLink" style="color: var(--text-muted); text-decoration: none; font-weight: bold; transition: color 0.3s;">سياسة الخصوصية</a>
                 </div>
 
                 <p class="footer-copyright" data-key="copyright">© 2026 Chatchi. جميع الحقوق محفوظة.</p>
@@ -131,34 +125,7 @@
         </footer>
     </div>
 
-    <div id="chat-view" class="hidden">
-        <div class="chat-container">
-            <p class="chat-status" data-key-status></p>
-            <div class="messages-area">
-                </div>
-            <div class="chat-input-area">
-                <input type="text" id="chat-input-field" data-key="chatPlaceholder" placeholder="اكتب رسانتك..." disabled autocomplete="off">
-                <button id="leave-button" title="إنهاء المحادثة" disabled>
-                    <i class="fa-solid fa-person-walking-arrow-right"></i>
-                </button>
-                <button id="send-button" data-key="chatSendBtn" disabled>إرسال</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirm-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 data-key="confirmLeaveTitle">هل أنت متأكد؟</h3>
-            <p data-key="confirmLeaveText">هل تريد حقاً مغادرة المحادثة؟</p>
-            <div class="modal-buttons">
-                <button id="confirm-yes-btn" class="modal-btn yes-btn" data-key="confirmYes">نعم، غادر</button>
-                <button id="confirm-no-btn" class="modal-btn no-btn" data-key="confirmNo">لا، ابقَ</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script src="index.js"></script>
 
 </body>
 </html>

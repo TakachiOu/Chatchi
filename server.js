@@ -2,15 +2,20 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
-const fs = require('fs');
 const { Server } = require("socket.io");
 const cors = require('cors');
-const nodemailer = require('nodemailer'); // <-- مكتبة الإيميل زدناها هنا
+const nodemailer = require('nodemailer'); 
 
 const app = express();
 app.use(cors());
-// تأكد أن ملفات الـ Front-end (index.html, style.css, script.js) موجودة في مجلد اسمه public
+
+// تأكد أن ملفات الـ Front-end موجودة في مجلد public
 app.use(express.static('public'));
+
+// [إضافة مهمة]: توجيه المسار الرئيسي إلى ملف index.html داخل مجلده الجديد
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index', 'index.html'));
+});
 
 const server = http.createServer(app);
 
@@ -27,8 +32,8 @@ const PORT = process.env.PORT || 3000;
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER, // إيميلك (لازم تعمرو في إعدادات Render)
-    pass: process.env.EMAIL_PASS  // كود التطبيق (App Password)
+    user: process.env.EMAIL_USER, 
+    pass: process.env.EMAIL_PASS  
   }
 });
 
@@ -137,7 +142,6 @@ io.on('connection', (socket) => {
     });
 
     // --- منطق الرسائل (Chat Logic) ---
-// --- منطق الرسائل (Chat Logic) المعدل ---
     socket.on('chatMessage', (data) => {
         if (!data.message || !data.room) return;
         if (activeRooms.get(socket.id) !== data.room) return;
@@ -145,7 +149,7 @@ io.on('connection', (socket) => {
         const cleanMessage = filterAndSanitize(data.message);
         if (!cleanMessage) return;
 
-        // [جديد] تخزين الرسالة في Buffer الغرفة
+        // تخزين الرسالة في Buffer الغرفة
         if (!roomMessages.has(data.room)) {
             roomMessages.set(data.room, []);
         }
@@ -156,10 +160,9 @@ io.on('connection', (socket) => {
             timestamp: Date.now()
         });
         
-        // نحدد عدد الرسائل المخزنة بـ 20 مثلاً باش ما نعمروش الرام بزاف
+        // نحدد عدد الرسائل المخزنة بـ 20
         if (msgs.length > 20) msgs.shift(); 
 
-        // بقية الكود تاعك (Rate Limiting و Spam)
         const history = messageHistory.get(socket.id) || [];
         if (cleanMessage === history[0] && cleanMessage === history[1]) return;
 
@@ -177,7 +180,7 @@ io.on('connection', (socket) => {
         socket.to(data.room).emit('chatMessage', cleanMessage);
     });
 
-    // [جديد] طلب المزامنة عند العودة من الخلفية
+    // طلب المزامنة عند العودة من الخلفية
     socket.on('requestSync', (data) => {
         const room = activeRooms.get(socket.id);
         if (room && roomMessages.has(room)) {
@@ -209,7 +212,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // تتبع حالة التطبيق (Backround/Foreground) - حل المشكلة الثانية
+    // تتبع حالة التطبيق (Backround/Foreground) 
     socket.on('updateAppState', (data) => {
         const room = activeRooms.get(socket.id);
         if (room) {
@@ -217,7 +220,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- الاقتراحات (إرسال عبر الإيميل بدلاً من الملف النصي) ---
+    // --- الاقتراحات (إرسال عبر الإيميل) ---
     socket.on('submitSuggestion', (suggestion) => {
         const sanitized = suggestion.replace(/\s+/g, ' ').trim();
         if (sanitized && sanitized.length < 500) {
