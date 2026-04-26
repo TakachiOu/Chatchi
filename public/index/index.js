@@ -132,6 +132,37 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // 6. تهيئة الصفحة عند التحميل
+    // 6. نظام الإعلانات الهجين (Hybrid Ads)
+    async function setupHybridAds() {
+        const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+
+        if (isNativeApp) {
+            // إزالة أكواد أدسنس لتجنب مخالفة سياسات التطبيقات
+            const adSenseScripts = document.querySelectorAll('script[src*="adsbygoogle"]');
+            adSenseScripts.forEach(script => script.remove());
+
+            // تشغيل AdMob بدلاً منها
+            try {
+                const { AdMob } = Capacitor.Plugins;
+                await AdMob.initialize();
+
+                const bannerOptions = {
+                    adId: 'ca-app-pub-4748269863410868/7009865744',
+                    adSize: 'BANNER',
+                    position: 'BOTTOM_CENTER',
+                    margin: 0,
+                    isTesting: false
+                };
+
+                await AdMob.showBanner(bannerOptions);
+            } catch (error) {
+                console.error('خطأ في تهيئة إعلانات AdMob:', error);
+            }
+        }
+        // في حال كان المستخدم في المتصفح، سيعمل AdSense طبيعياً ولا نحتاج لأي تدخل برمجي هنا
+    }
+
+    // 7. تهيئة الصفحة عند التحميل
     applyTranslations();
+    setupHybridAds();
 });

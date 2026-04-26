@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 
 // ==========================================
-// 1. السماح بقراءة الملفات الثابتة (CSS / JS / Images)
+// 1. السماح بقراءة الملفات الثابتة (CSS / JS / Images / SEO)
 // ==========================================
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/assets', express.static(path.join(__dirname, 'assets'))); 
@@ -37,7 +37,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "*", // مهم جداً للسماح لتطبيق الهاتف بالاتصال بالسيرفر
     methods: ["GET", "POST"]
   }
 });
@@ -196,12 +196,12 @@ io.on('connection', (socket) => {
         socket.to(data.room).emit('chatMessage', cleanMessage);
     });
 
-    // طلب المزامنة عند العودة من الخلفية
+    // طلب المزامنة عند العودة من الخلفية (للهواتف)
     socket.on('requestSync', (data) => {
         const room = activeRooms.get(socket.id);
         if (room && roomMessages.has(room)) {
             const allMessages = roomMessages.get(room);
-            // نبعثلو فقط الرسائل اللي هو ما بعثهاش (تاع الطرف الآخر)
+            // نرسل فقط الرسائل التي أرسلها الطرف الآخر
             const missedMessages = allMessages.filter(m => m.senderId !== socket.id);
             socket.emit('syncMessages', missedMessages);
         }
@@ -228,11 +228,12 @@ io.on('connection', (socket) => {
         }
     });
 
-    // تتبع حالة التطبيق (Backround/Foreground) 
+    // تتبع حالة التطبيق (Background/Foreground) للهواتف
     socket.on('updateAppState', (data) => {
         const room = activeRooms.get(socket.id);
         if (room) {
-            socket.to(room).emit('partnerAppStateChanged', { state: data.state });
+            // تم تصحيح هذا السطر: إرسال النص مباشرة ليتوافق مع chat.js
+            socket.to(room).emit('partnerAppStateChanged', data.state);
         }
     });
 

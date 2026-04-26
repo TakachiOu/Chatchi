@@ -130,11 +130,42 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.emit('findPartner', searchTags); // إرسال الـ tags المحفوظة
     }
 
-    // تطبيق الترجمة فوراً وبدء البحث التلقائي عند دخول الصفحة
+    // 4. نظام الإعلانات الهجين (Hybrid Ads)
+    async function setupHybridAds() {
+        const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+
+        if (isNativeApp) {
+            // إزالة أكواد أدسنس لتجنب مخالفة سياسات التطبيقات
+            const adSenseScripts = document.querySelectorAll('script[src*="adsbygoogle"]');
+            adSenseScripts.forEach(script => script.remove());
+
+            // تشغيل AdMob بدلاً منها
+            try {
+                const { AdMob } = Capacitor.Plugins;
+                await AdMob.initialize();
+
+                const bannerOptions = {
+                    adId: 'ca-app-pub-4748269863410868/7009865744',
+                    adSize: 'BANNER',
+                    position: 'BOTTOM_CENTER',
+                    margin: 0,
+                    isTesting: false
+                };
+
+                await AdMob.showBanner(bannerOptions);
+            } catch (error) {
+                console.error('خطأ في تهيئة إعلانات AdMob:', error);
+            }
+        }
+        // في المتصفح سيستمر AdSense بالعمل طبيعياً
+    }
+
+    // تطبيق الترجمة فوراً وبدء البحث التلقائي وإعداد الإعلانات عند دخول الصفحة
     applyTranslations();
     startSearching();
+    setupHybridAds();
 
-    // 4. أحداث المستخدم
+    // 5. أحداث المستخدم
     DOM.sendButton.onclick = sendMessage;
     DOM.inputField.onkeyup = (e) => { if (e.key === 'Enter') sendMessage(); };
 
@@ -157,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/'; 
     };
 
-    // 5. أحداث السيرفر (Socket)
+    // 6. أحداث السيرفر (Socket)
     socket.on('matchFound', (d) => {
         stopDotAnimation(); clearTimeout(autoRematchTimer);
         currentRoom = d.room; 
@@ -192,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('chatMessage', (m) => displayMessage(filterLocalMessage(m), 'stranger-message'));
     socket.on('syncMessages', (msgs) => msgs.forEach(m => displayMessage(filterLocalMessage(m.message), 'stranger-message')));
 
-    // 6. Capacitor (لأجهزة الموبايل)
+    // 7. Capacitor (لأجهزة الموبايل)
     if (window.Capacitor) {
         const { App } = Capacitor.Plugins;
         App.addListener('backButton', () => {

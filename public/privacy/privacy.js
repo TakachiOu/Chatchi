@@ -28,10 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chatText: 'تعمل منصتنا بنظام المراسلة اللحظية. بمجرد انتهاء المحادثة ومغادرتك للغرفة، يتم مسح جميع الرسائل فوراً وبشكل نهائي من خوادمنا. لا يوجد أي سجل (History) للمحادثات، ولا يمكن لأي طرف استرجاعها.',
             
             cookiesTitle: 'ملفات تعريف الارتباط (Cookies) والإعلانات',
-            cookiesText: 'نحن نستخدم خدمات جهات خارجية (مثل Google AdSense) لعرض الإعلانات. قد تستخدم هذه الجهات ملفات تعريف الارتباط (Cookies) لتقديم إعلانات مخصصة بناءً على زياراتك السابقة لهذا الموقع أو مواقع أخرى على الإنترنت. يمكنك إدارة تفضيلات الإعلانات الخاصة بك من خلال إعدادات حساب Google الخاص بك.',
+            cookiesText: 'نحن نستخدم خدمات جهات خارجية (مثل Google AdMob و Google AdSense) لعرض الإعلانات. قد تستخدم هذه الجهات ملفات تعريف الارتباط (Cookies) أو معرفات الأجهزة لتقديم إعلانات مخصصة بناءً على اهتماماتك. يمكنك إدارة تفضيلات الإعلانات الخاصة بك من خلال إعدادات حساب Google أو إعدادات هاتفك.',
             
             consentTitle: 'موافقتك',
-            consentText: 'باستخدامك لموقع Chatchi، فإنك توافق على سياسة الخصوصية الخاصة بنا الموضحة في هذه الصفحة.',
+            consentText: 'باستخدامك لموقع أو تطبيق Chatchi، فإنك توافق على سياسة الخصوصية الخاصة بنا الموضحة في هذه الصفحة.',
             
             copyright: '© 2026 Chatchi. جميع الحقوق محفوظة.'
         },
@@ -51,10 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chatText: 'Our platform uses real-time messaging. Once a chat ends and you leave the room, all messages are immediately and permanently deleted from our servers. There is no chat history, and no party can retrieve them.',
             
             cookiesTitle: 'Cookies and Advertisements',
-            cookiesText: 'We use third-party services (like Google AdSense) to display ads. These parties may use cookies to serve personalized ads based on your previous visits to this or other websites. You can manage your ad preferences through your Google account settings.',
+            cookiesText: 'We use third-party services (like Google AdMob and Google AdSense) to display ads. These parties may use cookies or device identifiers to serve personalized ads based on your interests. You can manage your ad preferences through your Google account settings or device settings.',
             
             consentTitle: 'Your Consent',
-            consentText: 'By using Chatchi, you consent to our Privacy Policy outlined on this page.',
+            consentText: 'By using the Chatchi website or app, you consent to our Privacy Policy outlined on this page.',
             
             copyright: '© 2026 Chatchi. All rights reserved.'
         }
@@ -87,6 +87,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =================================
+    // نظام الإعلانات الهجين (Hybrid Ads)
+    // =================================
+    async function setupHybridAds() {
+        const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+
+        if (isNativeApp) {
+            // إزالة أكواد أدسنس لتجنب مخالفة سياسات التطبيقات
+            const adSenseScripts = document.querySelectorAll('script[src*="adsbygoogle"]');
+            adSenseScripts.forEach(script => script.remove());
+
+            // تشغيل AdMob بدلاً منها
+            try {
+                const { AdMob } = Capacitor.Plugins;
+                await AdMob.initialize();
+
+                const bannerOptions = {
+                    adId: 'ca-app-pub-4748269863410868/7009865744',
+                    adSize: 'BANNER',
+                    position: 'BOTTOM_CENTER',
+                    margin: 0,
+                    isTesting: false
+                };
+
+                await AdMob.showBanner(bannerOptions);
+            } catch (error) {
+                console.error('خطأ في تهيئة إعلانات AdMob:', error);
+            }
+        }
+    }
+
+    // =================================
     // مستمع حدث زر تغيير اللغة
     // =================================
     if (langToggleButton) {
@@ -97,7 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // تشغيل الترجمة لأول مرة عند تحميل الصفحة لضمان المزامنة
+    // تشغيل الترجمة لأول مرة وبدء الإعلانات عند تحميل الصفحة
     applyTranslations();
+    setupHybridAds();
 
 });
