@@ -83,8 +83,10 @@ header {
     text-align: center; 
     margin-bottom: 5px; 
     background: linear-gradient(to right, #fff, var(--accent-color));
+        background-clip: text; 
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    color: var(--accent-color); 
 }
 .last-updated { 
     text-align: center; 
