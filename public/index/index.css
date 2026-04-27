@@ -17,15 +17,21 @@ input, textarea, button {
 
 html, body {
     height: 100%;
+    min-height: 100dvh; /* ضمان الطول الديناميكي للتوافق مع الهواتف الحديثة */
     scroll-behavior: smooth;
-    overflow-x: hidden; /* تم السماح بالتمرير العمودي هنا لقراءة القوانين */
+    overflow-x: hidden; 
 }
 body {
     font-family: 'Tajawal', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
+    
+    /* هذا هو السحر: جعل الواجهة تحترم الكاميرا والأزرار من كل الجهات */
     padding-top: env(safe-area-inset-top); 
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
 }
 
 /* --- Background & Header --- */
