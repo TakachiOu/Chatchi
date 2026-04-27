@@ -17,6 +17,7 @@
     "@capacitor/cli": "^7.4.2",
     "@capacitor/core": "^7.4.2",
     "@capacitor/keyboard": "^7.0.1",
+    "@capacitor/share": "^7.0.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "nodemailer": "^8.0.4",

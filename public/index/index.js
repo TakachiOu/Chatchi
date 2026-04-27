@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const APP_VERSION = "1.0.0"; // إصدار هذه النسخة من التطبيق حالياً
+    const APP_VERSION = "1.0.0"; // الإصدار كما طلبته
 
     // 1. محددات العناصر
     const DOM = {
@@ -10,15 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
         tagsArea: document.getElementById('tags-area'),
         startChatBtn: document.getElementById('start-chat-btn'),
         langToggleButton: document.getElementById('lang-toggle'),
+        shareBtn: document.getElementById('share-btn'),
         updateOverlay: document.getElementById('force-update-overlay'),
         updateLink: document.getElementById('update-link')
     };
 
     const tags = new Set();
-    // استرجاع اللغة المحفوظة أو استخدام العربية كافتراضي
     let currentLang = sessionStorage.getItem('chatchi_lang') || 'ar'; 
 
-    // 2. قاموس الترجمة (للصفحة الرئيسية والنافذة المنبثقة)
+    // 2. قاموس الترجمة
     const translations = {
         ar: {
             langToggle: 'English',
@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             privacyLink: 'سياسة الخصوصية',
             copyright: '© 2026 Chatchi. جميع الحقوق محفوظة.',
             credit: 'صُنع بكل ❤️ بواسطة <a href="#" class="credit-link">TaKaChi</a>',
-            // ترجمة نافذة التحديث
             updateTitle: 'تحديث جديد متوفر!',
             updateText: 'أنت تستخدم نسخة قديمة من التطبيق. يرجى التحديث الآن من متجر بلاي للحصول على آخر التحسينات الأمنية والميزات الجديدة.',
             updateBtn: 'تحديث الآن'
@@ -63,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
             privacyLink: 'Privacy Policy',
             copyright: '© 2026 Chatchi. All rights reserved.',
             credit: 'Made with ❤️ by <a href="#" class="credit-link">TaKaChi</a>',
-            // ترجمة نافذة التحديث
             updateTitle: 'Update Available!',
             updateText: 'You are using an outdated version. Please update from the Play Store to get the latest security improvements and features.',
             updateBtn: 'Update Now'
@@ -74,8 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyTranslations() {
         document.documentElement.lang = currentLang;
         document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-        
-        // حفظ اللغة المحددة لكي تتذكرها صفحة الدردشة وصفحة الخصوصية
         sessionStorage.setItem('chatchi_lang', currentLang); 
 
         document.querySelectorAll('[data-key]').forEach(el => {
@@ -100,15 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.tagsArea.appendChild(fragment);
     }
 
-    // 5. نظام التحديث الإجباري (Force Update)
+    // 5. نظام التحديث الإجباري
     async function checkUpdate() {
         const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-        
         if (isNativeApp) {
             try {
                 const response = await fetch('https://chatchi.onrender.com/api/app-version');
                 const data = await response.json();
-
                 if (data.forceUpdate && data.latestVersion !== APP_VERSION) {
                     showUpdateModal(data.playStoreUrl);
                 }
@@ -120,11 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showUpdateModal(url) {
         if (DOM.updateOverlay) {
-            DOM.updateOverlay.classList.remove('hidden'); // إظهار النافذة
-            DOM.updateLink.href = url; // تعيين رابط بلاي ستور
-            DOM.startChatBtn.disabled = true; // تعطيل زر الدخول للدردشة
-            
-            // إضافة رابط لتطبيق الهاتف لفتحه خارج التطبيق إذا لزم الأمر
+            DOM.updateOverlay.classList.remove('hidden'); 
+            DOM.updateLink.href = url; 
+            DOM.startChatBtn.disabled = true; 
             DOM.updateLink.onclick = (e) => {
                 if (window.Capacitor && window.Capacitor.Plugins.App) {
                     e.preventDefault();
@@ -135,8 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 6. الأحداث (Events)
-    
-    // زر تغيير اللغة
     if (DOM.langToggleButton) {
         DOM.langToggleButton.onclick = () => { 
             currentLang = currentLang === 'ar' ? 'en' : 'ar'; 
@@ -144,7 +134,51 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // إدخال الـ Tags
+    // نظام المشاركة الاحترافي
+    if (DOM.shareBtn) {
+        DOM.shareBtn.onclick = async () => {
+            const shareTitle = currentLang === 'ar' ? 'دردش مع المجهول في Chatchi' : 'Chat anonymously on Chatchi';
+            const shareText = currentLang === 'ar' 
+                ? 'جرب تطبيق Chatchi! أفضل مساحة آمنة للدردشة المجهولة والعشوائية. ادخل الآن:' 
+                : 'Try Chatchi! The best safe space for anonymous and random chats. Check it out:';
+            const shareUrl = 'https://chatchi.onrender.com';
+
+            const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+
+            // استخدام مكتبة Share للهاتف إذا كانت متاحة
+            if (isNativeApp && window.Capacitor.Plugins.Share) {
+                try {
+                    await window.Capacitor.Plugins.Share.share({
+                        title: shareTitle,
+                        text: shareText,
+                        url: shareUrl,
+                        dialogTitle: shareTitle
+                    });
+                } catch (e) {
+                    console.error("Share API error:", e);
+                }
+            } 
+            // استخدام Web Share API للمتصفحات
+            else if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: shareTitle,
+                        text: shareText,
+                        url: shareUrl
+                    });
+                } catch (e) {
+                    console.error("Web Share API error:", e);
+                }
+            } 
+            // بديل في حال عدم الدعم (نسخ الرابط)
+            else {
+                navigator.clipboard.writeText(`${shareText} ${shareUrl}`).then(() => {
+                    alert(currentLang === 'ar' ? 'تم نسخ الرابط للحافظة!' : 'Link copied to clipboard!');
+                });
+            }
+        };
+    }
+
     if (DOM.tagsInput) {
         DOM.tagsInput.onkeyup = (e) => {
             if (e.key === 'Enter') {
@@ -158,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // حذف الـ Tags
     if (DOM.tagsArea) {
         DOM.tagsArea.onclick = (e) => { 
             if (e.target.classList.contains('close-btn')) { 
@@ -168,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // زر "ابحث عن شخص"
     if (DOM.startChatBtn) {
         DOM.startChatBtn.onclick = () => {
             sessionStorage.setItem('chatchi_tags', JSON.stringify(Array.from(tags)));
@@ -176,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // 7. نظام الإعلانات الهجين (Hybrid Ads)
+    // 7. نظام الإعلانات الهجين 
     async function setupHybridAds() {
         const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
 
@@ -193,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     adSize: 'BANNER',
                     position: 'BOTTOM_CENTER',
                     margin: 0,
-                    istesting: false // تذكر تغييرها لـ false عند الرفع لمتجر بلاي
+                    isTesting: false 
                 };
 
                 await AdMob.showBanner(bannerOptions);
@@ -203,8 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 8. تهيئة الصفحة عند التحميل
+    
     applyTranslations();
     setupHybridAds();
-    checkUpdate(); // تشغيل فحص التحديث
+    checkUpdate(); 
 });

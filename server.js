@@ -18,17 +18,14 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // ==========================================
 // 2. الروابط الاحترافية النظيفة (Clean URLs)
 // ==========================================
-// توجيه المسار الرئيسي إلى الصفحة الرئيسية
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index', 'index.html'));
 });
 
-// توجيه مسار /chat إلى صفحة الدردشة
 app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'chat', 'chat.html'));
 });
 
-// توجيه مسار /privacy إلى صفحة الخصوصية
 app.get('/privacy', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'privacy', 'privacy.html'));
 });
@@ -38,19 +35,25 @@ app.get('/privacy', (req, res) => {
 // ==========================================
 app.get('/api/app-version', (req, res) => {
     res.json({
-        latestVersion: "1.0.0", // رقم الإصدار المطلوب حالياً (يمكنك تغييره مستقبلاً)
-        forceUpdate: true, // هل التحديث إجباري؟ (true يعني نعم)
-        playStoreUrl: "https://play.google.com/store/apps/details?id=com.chatchi.app" // رابط تطبيقك على متجر بلاي (يُعدل لاحقاً)
+        latestVersion: "1.0.0", // بقي على 1.0.0 كما طلبت لعدم إظهار نافذة التحديث حالياً
+        forceUpdate: true, 
+        playStoreUrl: "https://play.google.com/store/apps/details?id=com.chatchi.app" 
     });
 });
 
 const server = http.createServer(app);
 
+// ==========================================
+// 4. إعدادات Socket.io (محسنة للسرعة القصوى)
+// ==========================================
 const io = new Server(server, {
   cors: {
-    origin: "*", // مهم جداً للسماح لتطبيق الهاتف بالاتصال بالسيرفر
+    origin: "*", 
     methods: ["GET", "POST"]
-  }
+  },
+  pingTimeout: 20000,  // تسريع اكتشاف انقطاع الاتصال (20 ثانية بدل 60)
+  pingInterval: 15000, // إرسال نبضات أسرع للحفاظ على الاتصال نشطاً
+  perMessageDeflate: false // تعطيل الضغط للرسائل النصية لجعل الإرسال لحظياً (Zero Latency)
 });
 
 const PORT = process.env.PORT || 3000;
@@ -67,18 +70,13 @@ const transporter = nodemailer.createTransport({
 // --- إعدادات الفلترة والحماية ---
 const forbiddenWords = [
     'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 
-    'dick', 'fack', 'زك', 'ديوث','شرموطة',
-    'عطاي', 'منيوك', 'شرموط', 'fuck' , 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 'dick', 'fack', 'زك', 'ديوث','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' , '9hba','no9ch','sowa' ,'3atay' ,'bzoul' ,'zwayz','gay' ,'dyouth', 'zamal' ,'hatchoun','nhatchoun',
+    'dick', 'fack', 'زك', 'ديوث','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' , 
+    '9hba','no9ch','sowa' ,'3atay' ,'bzoul' ,'zwayz','gay' ,'dyouth', 'zamal' ,'nhatchoun'
 ];
 
-// دالة لتنظيف الرسائل من الكلمات البذيئة ومنع حقن الكود (HTML/Scripts)
 function filterAndSanitize(text) {
     if (typeof text !== 'string') return '';
-    
-    // منع الـ HTML Injection (تحويل < و > إلى نصوص عادية)
     let sanitized = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    
-    // فلترة الكلمات الممنوعة
     forbiddenWords.forEach(word => {
         const regex = new RegExp(word, 'gi');
         sanitized = sanitized.replace(regex, '*'.repeat(word.length));
@@ -86,24 +84,22 @@ function filterAndSanitize(text) {
     return sanitized;
 }
 
+// قواعد البيانات المؤقتة السريعة (RAM Cache)
 const messageLimiter = new Map();
-const MESSAGE_RATE_LIMIT = 20; // 20 رسالة كحد أقصى
-const MESSAGE_RATE_PERIOD = 60 * 1000; // في الدقيقة الواحدة
-const roomMessages = new Map(); // لتخزين الرسائل مؤقتاً لكل غرفة
-const messageHistory = new Map(); // لمنع الـ Spam (إرسال نفس الرسالة)
-const waitingUsers = new Map();  // المستخدمين في قائمة الانتظار (مقسمين حسب الـ Tags)
-const activeRooms = new Map();   // تتبع الغرف النشطة لكل مستخدم
+const MESSAGE_RATE_LIMIT = 20; 
+const MESSAGE_RATE_PERIOD = 60 * 1000; 
+const roomMessages = new Map(); 
+const messageHistory = new Map(); 
+const waitingUsers = new Map();  
+const activeRooms = new Map();   
 
 // --- Main Connection Handler ---
 io.on('connection', (socket) => {
-    console.log(`[+] User Connected: ${socket.id}`);
-
     // تحديث عدد المتصلين فور دخول مستخدم جديد
     io.emit('updateOnlineUsers', io.engine.clientsCount);
 
-    // --- منطق البحث عن شريك (Matching System) ---
+    // --- منطق البحث عن شريك (Fast Matching System) ---
     socket.on('findPartner', (tags) => {
-        // تنظيف الـ Tags
         const searchTags = Array.isArray(tags) 
             ? tags.map(t => typeof t === 'string' ? t.toLowerCase().trim() : t).filter(t => t !== "")
             : [];
@@ -111,7 +107,7 @@ io.on('connection', (socket) => {
         let partnerSocketId = null;
         let matchedTag = null;
 
-        // 1. محاولة المطابقة عبر الـ Tags
+        // 1. المطابقة الدقيقة عبر الـ Tags
         for (const tag of searchTags) {
             if (waitingUsers.has(tag) && waitingUsers.get(tag).length > 0) {
                 const usersInTag = waitingUsers.get(tag);
@@ -128,14 +124,14 @@ io.on('connection', (socket) => {
             if (partnerSocketId) break;
         }
 
-        // 2. مطابقة عشوائية (Fallback) إذا لم نجد شخصاً بنفس الاهتمام
+        // 2. المطابقة العشوائية السريعة
         if (!partnerSocketId) {
             for (const [tag, users] of waitingUsers.entries()) {
                 for (let i = 0; i < users.length; i++) {
                     const pId = users[i];
                     if (pId !== socket.id && io.sockets.sockets.has(pId)) {
                         partnerSocketId = pId;
-                        matchedTag = null; // نعتبرها عشوائية
+                        matchedTag = null; 
                         users.splice(i, 1);
                         break;
                     }
@@ -156,9 +152,7 @@ io.on('connection', (socket) => {
 
             io.to(socket.id).emit('matchFound', { room: room, matchedTag: matchedTag });
             io.to(partnerSocketId).emit('matchFound', { room: room, matchedTag: matchedTag });
-            console.log(`[!] Match Created: ${socket.id} <-> ${partnerSocketId}`);
         } else {
-            // إضافة المستخدم لقائمة الانتظار
             const waitTag = searchTags.length > 0 ? searchTags[0] : '#random';
             if (!waitingUsers.has(waitTag)) waitingUsers.set(waitTag, []);
             if (!waitingUsers.get(waitTag).includes(socket.id)) {
@@ -168,7 +162,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- منطق الرسائل (Chat Logic) ---
+    // --- منطق الرسائل (Zero-Latency Chat) ---
     socket.on('chatMessage', (data) => {
         if (!data.message || !data.room) return;
         if (activeRooms.get(socket.id) !== data.room) return;
@@ -176,18 +170,10 @@ io.on('connection', (socket) => {
         const cleanMessage = filterAndSanitize(data.message);
         if (!cleanMessage) return;
 
-        // تخزين الرسالة في Buffer الغرفة
-        if (!roomMessages.has(data.room)) {
-            roomMessages.set(data.room, []);
-        }
+        if (!roomMessages.has(data.room)) roomMessages.set(data.room, []);
         const msgs = roomMessages.get(data.room);
-        msgs.push({
-            senderId: socket.id,
-            message: cleanMessage,
-            timestamp: Date.now()
-        });
+        msgs.push({ senderId: socket.id, message: cleanMessage, timestamp: Date.now() });
         
-        // نحدد عدد الرسائل المخزنة بـ 20
         if (msgs.length > 20) msgs.shift(); 
 
         const history = messageHistory.get(socket.id) || [];
@@ -203,52 +189,43 @@ io.on('connection', (socket) => {
         messageLimiter.set(socket.id, recentTimestamps);
         messageHistory.set(socket.id, [cleanMessage, ...history].slice(0, 2));
 
-        // إرسال الرسالة للطرف الآخر
+        // إرسال مباشر للغرفة
         socket.to(data.room).emit('chatMessage', cleanMessage);
     });
 
-    // طلب المزامنة عند العودة من الخلفية (للهواتف)
-    socket.on('requestSync', (data) => {
+    // المزامنة للهواتف
+    socket.on('requestSync', () => {
         const room = activeRooms.get(socket.id);
         if (room && roomMessages.has(room)) {
             const allMessages = roomMessages.get(room);
-            // نرسل فقط الرسائل التي أرسلها الطرف الآخر
             const missedMessages = allMessages.filter(m => m.senderId !== socket.id);
             socket.emit('syncMessages', missedMessages);
         }
     });
 
-    // Typing Indicators
     socket.on('userTyping', (data) => socket.to(data.room).emit('partnerTyping'));
     socket.on('userStoppedTyping', (data) => socket.to(data.room).emit('partnerStoppedTyping'));
 
-    // مغادرة الغرفة يدوياً
     socket.on('leaveRoom', (room) => {
         socket.leave(room);
         socket.to(room).emit('partnerLeft', { reason: 'manual_leave' });
         activeRooms.delete(socket.id);
-        console.log(`[-] User ${socket.id} left room`);
         roomMessages.delete(room);
     });
 
-    // إلغاء البحث
     socket.on('cancelSearch', () => {
-        for (const [tag, users] of waitingUsers.entries()) {
+        for (const users of waitingUsers.values()) {
             const index = users.indexOf(socket.id);
             if (index > -1) users.splice(index, 1);
         }
     });
 
-    // تتبع حالة التطبيق (Background/Foreground) للهواتف
     socket.on('updateAppState', (data) => {
         const room = activeRooms.get(socket.id);
-        if (room) {
-            // إرسال النص مباشرة ليتوافق مع chat.js
-            socket.to(room).emit('partnerAppStateChanged', data.state);
-        }
+        if (room) socket.to(room).emit('partnerAppStateChanged', data.state);
     });
 
-    // --- الاقتراحات (إرسال عبر الإيميل) ---
+    // --- الاقتراحات ---
     socket.on('submitSuggestion', (suggestion) => {
         const sanitized = suggestion.replace(/\s+/g, ' ').trim();
         if (sanitized && sanitized.length < 500) {
@@ -256,20 +233,12 @@ io.on('connection', (socket) => {
                 from: `"Chatchi Feedback" <${process.env.EMAIL_USER}>`,
                 to: process.env.EMAIL_USER,
                 subject: '🚀 اقتراح جديد من Chatchi',
-                text: `يا تاكاشي، وصلك اقتراح جديد من السيت:\n\n"${sanitized}"\n\nالوقت: ${new Date().toLocaleString('ar-DZ')}`
+                text: `يا تاكاشي، وصلك اقتراح جديد:\n\n"${sanitized}"\n\nالوقت: ${new Date().toLocaleString('ar-DZ')}`
             };
-
-            transporter.sendMail(mailOptions, (err, info) => {
-                if (err) {
-                    console.error('Email Error:', err);
-                } else {
-                    console.log('Suggestion Email Sent Successfully!');
-                }
-            });
+            transporter.sendMail(mailOptions, (err) => { if (err) console.error('Email Error:', err); });
         }
     });
 
-    // عند انقطاع الاتصال المفاجئ
     socket.on('disconnect', () => {
         const room = activeRooms.get(socket.id);
         if (room) {
@@ -278,7 +247,6 @@ io.on('connection', (socket) => {
         }
         activeRooms.delete(socket.id);
 
-        // حذف المستخدم من كل قوائم الانتظار
         for (const users of waitingUsers.values()) {
             const index = users.indexOf(socket.id);
             if (index > -1) users.splice(index, 1);
@@ -287,7 +255,6 @@ io.on('connection', (socket) => {
         messageLimiter.delete(socket.id);
         messageHistory.delete(socket.id);
         io.emit('updateOnlineUsers', io.engine.clientsCount);
-        console.log(`[x] User Disconnected: ${socket.id}`);
     });
 });
 
