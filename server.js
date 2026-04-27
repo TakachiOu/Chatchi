@@ -38,9 +38,9 @@ app.get('/privacy', (req, res) => {
 // ==========================================
 app.get('/api/app-version', (req, res) => {
     res.json({
-        latestVersion: "1.1.0", // رقم الإصدار المطلوب حالياً (يمكنك تغييره مستقبلاً)
+        latestVersion: "1.0.0", // رقم الإصدار المطلوب حالياً (يمكنك تغييره مستقبلاً)
         forceUpdate: true, // هل التحديث إجباري؟ (true يعني نعم)
-        playStoreUrl: "https://www.google.com" // رابط تطبيقك على متجر بلاي (يُعدل لاحقاً)
+        playStoreUrl: "https://play.google.com/store/apps/details?id=com.chatchi.app" // رابط تطبيقك على متجر بلاي (يُعدل لاحقاً)
     });
 });
 

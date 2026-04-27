@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmNoBtn: document.getElementById('confirm-no-btn')
     };
 
-    // استرجاع الـ Tags واللغة التي اختارها المستخدم من الصفحة الرئيسية
     const searchTags = JSON.parse(sessionStorage.getItem('chatchi_tags') || '[]');
     let currentLang = sessionStorage.getItem('chatchi_lang') || 'ar';
     
@@ -32,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const forbiddenWords = ['زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 'dick', 'fack', 'زك', 'ديوث','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' , '9hba','no9ch','sowa' ,'3atay' ,'bzoul' ,'zwayz','gay' ,'dyouth', 'zamal' ,'hatchoun','nhatchoun'];
     const forbiddenRegex = new RegExp(forbiddenWords.join('|'), 'gi');
 
-    // 2. قاموس الترجمة (للدردشة فقط)
+    // 2. قاموس الترجمة
     const translations = {
         ar: {
             chatPlaceholder: 'اكتب رسالتك...',
@@ -90,12 +89,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function filterLocalMessage(text) { return text.replace(forbiddenRegex, m => '*'.repeat(m.length)); }
 
+    // تعديل هنا لضمان النزول السلس عند إضافة رسالة
     function displayMessage(msg, type) {
         const bubble = document.createElement('div');
         bubble.className = `message-bubble ${type}`;
         bubble.textContent = msg;
         DOM.messagesArea.appendChild(bubble);
-        requestAnimationFrame(() => DOM.messagesArea.scrollTo({ top: DOM.messagesArea.scrollHeight, behavior: 'smooth' }));
+        setTimeout(() => {
+            DOM.messagesArea.scrollTo({ top: DOM.messagesArea.scrollHeight, behavior: 'smooth' });
+        }, 50);
     }
 
     function sendMessage() {
@@ -104,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
             socket.emit('chatMessage', { room: currentRoom, message: raw });
             displayMessage(filterLocalMessage(raw), 'my-message');
             DOM.inputField.value = '';
-            DOM.inputField.focus();
+            // ترك التركيز (Focus) لكي لا يختفي الكيبورد بعد الإرسال
+            DOM.inputField.focus(); 
         }
     }
 
@@ -127,10 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.chatStatus.dataset.keyStatus = 'statusSearching';
         DOM.chatStatus.dataset.matchType = '';
         startDotAnimation();
-        socket.emit('findPartner', searchTags); // إرسال الـ tags المحفوظة
+        socket.emit('findPartner', searchTags); 
     }
 
-    // تطبيق الترجمة فوراً وبدء البحث التلقائي عند دخول الصفحة
     applyTranslations();
     startSearching();
 
@@ -153,11 +155,31 @@ document.addEventListener('DOMContentLoaded', () => {
         stopDotAnimation(); clearTimeout(autoRematchTimer);
         if (currentRoom) socket.emit('leaveRoom', currentRoom);
         else socket.emit('cancelSearch');
-        // العودة إلى الصفحة الرئيسية بدل إخفاء الشات باستخدام الرابط النظيف
         window.location.href = '/'; 
     };
 
-    // 5. أحداث السيرفر (Socket)
+    // =========================================
+    // 5. إصلاح مشكلة الكيبورد (Keyboard UI Fix)
+    // =========================================
+    
+    // عند لمس حقل الإدخال وظهور الكيبورد
+    DOM.inputField.addEventListener('focus', () => {
+        setTimeout(() => {
+            DOM.messagesArea.scrollTop = DOM.messagesArea.scrollHeight;
+        }, 300); // ننتظر 300 جزء من الثانية حتى يكتمل صعود الكيبورد بالكامل
+    });
+
+    // عند تغير حجم الشاشة (تقلصها بسبب الكيبورد)
+    window.addEventListener('resize', () => {
+        if (document.activeElement === DOM.inputField) {
+            setTimeout(() => {
+                DOM.messagesArea.scrollTop = DOM.messagesArea.scrollHeight;
+            }, 100);
+        }
+    });
+    // =========================================
+
+    // 6. أحداث السيرفر (Socket)
     socket.on('matchFound', (d) => {
         stopDotAnimation(); clearTimeout(autoRematchTimer);
         currentRoom = d.room; 
@@ -192,14 +214,14 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('chatMessage', (m) => displayMessage(filterLocalMessage(m), 'stranger-message'));
     socket.on('syncMessages', (msgs) => msgs.forEach(m => displayMessage(filterLocalMessage(m.message), 'stranger-message')));
 
-    // 6. Capacitor (لأجهزة الموبايل)
+    // 7. Capacitor
     if (window.Capacitor) {
         const { App } = Capacitor.Plugins;
         App.addListener('backButton', () => {
             if (!DOM.confirmModal.classList.contains('hidden')) {
                 DOM.confirmModal.classList.add('hidden');
             } else {
-                DOM.confirmModal.classList.remove('hidden'); // إظهار تحذير الخروج
+                DOM.confirmModal.classList.remove('hidden'); 
             }
         });
         App.addListener('appStateChange', ({ isActive }) => {
