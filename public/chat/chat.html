@@ -7,7 +7,7 @@
     </script>
   
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <title>Chatchi – غرفة المحادثة</title>
   
   <meta name="robots" content="noindex, nofollow"> 
@@ -19,7 +19,7 @@
   
   <link rel="stylesheet" href="/chat/chat.css">
 
-
+  
 </head>
 
 <body>
@@ -32,8 +32,10 @@
     <div id="chat-view">
         <div class="chat-container">
             <p class="chat-status" data-key-status>جارٍ تهيئة الاتصال...</p>
+            
             <div class="messages-area">
                 </div>
+            
             <div class="chat-input-area">
                 <input type="text" id="chat-input-field" data-key="chatPlaceholder" placeholder="اكتب رسالتك..." disabled autocomplete="off">
                 <button id="leave-button" title="إنهاء المحادثة" disabled>
@@ -56,7 +58,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
-    
+
     <script src="/chat/chat.js"></script>
 
 </body>

@@ -1,5 +1,5 @@
 import { CapacitorConfig } from '@capacitor/cli';
-
+import { KeyboardResize } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
   appId: 'com.takachi.chatchi',
@@ -8,8 +8,13 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://chatchi.onrender.com/',
     androidScheme: 'https'
+  },
+  plugins: {
+    Keyboard: {
+      resize: KeyboardResize.Body,
+      resizeOnFullScreen: true
+    }
   }
-
 };
 
 export default config;
