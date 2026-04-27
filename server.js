@@ -33,6 +33,17 @@ app.get('/privacy', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'privacy', 'privacy.html'));
 });
 
+// ==========================================
+// 3. نظام الإجبار على التحديث (Force Update)
+// ==========================================
+app.get('/api/app-version', (req, res) => {
+    res.json({
+        latestVersion: "1.0.0", // رقم الإصدار المطلوب حالياً (يمكنك تغييره مستقبلاً)
+        forceUpdate: true, // هل التحديث إجباري؟ (true يعني نعم)
+        playStoreUrl: "https://play.google.com/store/apps/details?id=com.chatchi.app" // رابط تطبيقك على متجر بلاي (يُعدل لاحقاً)
+    });
+});
+
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -57,7 +68,7 @@ const transporter = nodemailer.createTransport({
 const forbiddenWords = [
     'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 
     'dick', 'fack', 'زك', 'ديوث','شرموطة',
-    'عطاي', 'منيوك', 'شرموط', 'fuck' 
+    'عطاي', 'منيوك', 'شرموط', 'fuck' , 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 'dick', 'fack', 'زك', 'ديوث','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' , '9hba','no9ch','sowa' ,'3atay' ,'bzoul' ,'zwayz','gay' ,'dyouth', 'zamal' ,'hatchoun','nhatchoun',
 ];
 
 // دالة لتنظيف الرسائل من الكلمات البذيئة ومنع حقن الكود (HTML/Scripts)
@@ -232,7 +243,7 @@ io.on('connection', (socket) => {
     socket.on('updateAppState', (data) => {
         const room = activeRooms.get(socket.id);
         if (room) {
-            // تم تصحيح هذا السطر: إرسال النص مباشرة ليتوافق مع chat.js
+            // إرسال النص مباشرة ليتوافق مع chat.js
             socket.to(room).emit('partnerAppStateChanged', data.state);
         }
     });

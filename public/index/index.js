@@ -2,19 +2,23 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    const APP_VERSION = "1.0.0"; // إصدار هذه النسخة من التطبيق حالياً
+
     // 1. محددات العناصر
     const DOM = {
         tagsInput: document.getElementById('tags-input'),
         tagsArea: document.getElementById('tags-area'),
         startChatBtn: document.getElementById('start-chat-btn'),
-        langToggleButton: document.getElementById('lang-toggle')
+        langToggleButton: document.getElementById('lang-toggle'),
+        updateOverlay: document.getElementById('force-update-overlay'),
+        updateLink: document.getElementById('update-link')
     };
 
     const tags = new Set();
     // استرجاع اللغة المحفوظة أو استخدام العربية كافتراضي
     let currentLang = sessionStorage.getItem('chatchi_lang') || 'ar'; 
 
-    // 2. قاموس الترجمة (للصفحة الرئيسية فقط)
+    // 2. قاموس الترجمة (للصفحة الرئيسية والنافذة المنبثقة)
     const translations = {
         ar: {
             langToggle: 'English',
@@ -34,7 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
             rule3: 'استمتع بتجربتك وكن سبباً في جعل تجربة الآخرين ممتعة.',
             privacyLink: 'سياسة الخصوصية',
             copyright: '© 2026 Chatchi. جميع الحقوق محفوظة.',
-            credit: 'صُنع بكل ❤️ بواسطة <a href="#" class="credit-link">TaKaChi</a>'
+            credit: 'صُنع بكل ❤️ بواسطة <a href="#" class="credit-link">TaKaChi</a>',
+            // ترجمة نافذة التحديث
+            updateTitle: 'تحديث جديد متوفر!',
+            updateText: 'أنت تستخدم نسخة قديمة من التطبيق. يرجى التحديث الآن من متجر بلاي للحصول على آخر التحسينات الأمنية والميزات الجديدة.',
+            updateBtn: 'تحديث الآن'
         },
         en: {
             langToggle: 'العربية',
@@ -54,7 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
             rule3: 'Enjoy and be kind.',
             privacyLink: 'Privacy Policy',
             copyright: '© 2026 Chatchi. All rights reserved.',
-            credit: 'Made with ❤️ by <a href="#" class="credit-link">TaKaChi</a>'
+            credit: 'Made with ❤️ by <a href="#" class="credit-link">TaKaChi</a>',
+            // ترجمة نافذة التحديث
+            updateTitle: 'Update Available!',
+            updateText: 'You are using an outdated version. Please update from the Play Store to get the latest security improvements and features.',
+            updateBtn: 'Update Now'
         }
     };
 
@@ -88,7 +100,41 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.tagsArea.appendChild(fragment);
     }
 
-    // 5. الأحداث (Events)
+    // 5. نظام التحديث الإجباري (Force Update)
+    async function checkUpdate() {
+        const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+        
+        if (isNativeApp) {
+            try {
+                const response = await fetch('https://chatchi.onrender.com/api/app-version');
+                const data = await response.json();
+
+                if (data.forceUpdate && data.latestVersion !== APP_VERSION) {
+                    showUpdateModal(data.playStoreUrl);
+                }
+            } catch (error) {
+                console.error("خطأ في التحقق من التحديث:", error);
+            }
+        }
+    }
+
+    function showUpdateModal(url) {
+        if (DOM.updateOverlay) {
+            DOM.updateOverlay.classList.remove('hidden'); // إظهار النافذة
+            DOM.updateLink.href = url; // تعيين رابط بلاي ستور
+            DOM.startChatBtn.disabled = true; // تعطيل زر الدخول للدردشة
+            
+            // إضافة رابط لتطبيق الهاتف لفتحه خارج التطبيق إذا لزم الأمر
+            DOM.updateLink.onclick = (e) => {
+                if (window.Capacitor && window.Capacitor.Plugins.App) {
+                    e.preventDefault();
+                    window.Capacitor.Plugins.App.openUrl({ url: url });
+                }
+            };
+        }
+    }
+
+    // 6. الأحداث (Events)
     
     // زر تغيير اللغة
     if (DOM.langToggleButton) {
@@ -122,26 +168,22 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // زر "ابحث عن شخص" (الحدث الأهم)
+    // زر "ابحث عن شخص"
     if (DOM.startChatBtn) {
         DOM.startChatBtn.onclick = () => {
-            // 1. نحفظ الـ Tags في الذاكرة المؤقتة لتقرأها صفحة الدردشة
             sessionStorage.setItem('chatchi_tags', JSON.stringify(Array.from(tags)));
-            // 2. الانتقال إلى صفحة الدردشة باستخدام الرابط النظيف
             window.location.href = '/chat';
         };
     }
 
-    // 6. نظام الإعلانات الهجين (Hybrid Ads)
+    // 7. نظام الإعلانات الهجين (Hybrid Ads)
     async function setupHybridAds() {
         const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
 
         if (isNativeApp) {
-            // إزالة أكواد أدسنس لتجنب مخالفة سياسات التطبيقات
             const adSenseScripts = document.querySelectorAll('script[src*="adsbygoogle"]');
             adSenseScripts.forEach(script => script.remove());
 
-            // تشغيل AdMob بدلاً منها
             try {
                 const { AdMob } = Capacitor.Plugins;
                 await AdMob.initialize();
@@ -151,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     adSize: 'BANNER',
                     position: 'BOTTOM_CENTER',
                     margin: 0,
-                    isTesting: true
+                    isTesting: true // تذكر تغييرها لـ false عند الرفع لمتجر بلاي
                 };
 
                 await AdMob.showBanner(bannerOptions);
@@ -159,10 +201,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('خطأ في تهيئة إعلانات AdMob:', error);
             }
         }
-        // في حال كان المستخدم في المتصفح، سيعمل AdSense طبيعياً ولا نحتاج لأي تدخل برمجي هنا
     }
 
-    // 7. تهيئة الصفحة عند التحميل
+    // 8. تهيئة الصفحة عند التحميل
     applyTranslations();
     setupHybridAds();
+    checkUpdate(); // تشغيل فحص التحديث
 });
