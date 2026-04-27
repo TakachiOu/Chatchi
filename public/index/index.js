@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     adSize: 'BANNER',
                     position: 'BOTTOM_CENTER',
                     margin: 0,
-                    isTesting: false
+                    isTesting: true
                 };
 
                 await AdMob.showBanner(bannerOptions);
