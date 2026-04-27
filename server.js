@@ -35,7 +35,7 @@ app.get('/privacy', (req, res) => {
 // ==========================================
 app.get('/api/app-version', (req, res) => {
     res.json({
-        latestVersion: "1.0.0", // بقي على 1.0.0 كما طلبت لعدم إظهار نافذة التحديث حالياً
+        latestVersion: "1.0.0", 
         forceUpdate: true, 
         playStoreUrl: "https://play.google.com/store/apps/details?id=com.chatchi.app" 
     });
@@ -51,14 +51,14 @@ const io = new Server(server, {
     origin: "*", 
     methods: ["GET", "POST"]
   },
-  pingTimeout: 20000,  // تسريع اكتشاف انقطاع الاتصال (20 ثانية بدل 60)
-  pingInterval: 15000, // إرسال نبضات أسرع للحفاظ على الاتصال نشطاً
-  perMessageDeflate: false // تعطيل الضغط للرسائل النصية لجعل الإرسال لحظياً (Zero Latency)
+  pingTimeout: 15000,  
+  pingInterval: 10000, 
+  perMessageDeflate: false 
 });
 
 const PORT = process.env.PORT || 3000;
 
-// --- إعداد Nodemailer لإرسال الاقتراحات للإيميل ---
+// --- إعداد Nodemailer ---
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -95,10 +95,9 @@ const activeRooms = new Map();
 
 // --- Main Connection Handler ---
 io.on('connection', (socket) => {
-    // تحديث عدد المتصلين فور دخول مستخدم جديد
     io.emit('updateOnlineUsers', io.engine.clientsCount);
 
-    // --- منطق البحث عن شريك (Fast Matching System) ---
+    // --- منطق البحث عن شريك (Ultra-Fast Matching System) ---
     socket.on('findPartner', (tags) => {
         const searchTags = Array.isArray(tags) 
             ? tags.map(t => typeof t === 'string' ? t.toLowerCase().trim() : t).filter(t => t !== "")
@@ -107,36 +106,30 @@ io.on('connection', (socket) => {
         let partnerSocketId = null;
         let matchedTag = null;
 
-        // 1. المطابقة الدقيقة عبر الـ Tags
+        // 1. المطابقة الدقيقة الفورية (O(1) Time Complexity)
         for (const tag of searchTags) {
-            if (waitingUsers.has(tag) && waitingUsers.get(tag).length > 0) {
-                const usersInTag = waitingUsers.get(tag);
-                for (let i = 0; i < usersInTag.length; i++) {
-                    const pId = usersInTag[i];
-                    if (pId !== socket.id && io.sockets.sockets.has(pId)) {
-                        partnerSocketId = pId;
-                        matchedTag = tag;
-                        usersInTag.splice(i, 1);
-                        break;
-                    }
+            const queue = waitingUsers.get(tag);
+            if (queue && queue.length > 0) {
+                const index = queue.findIndex(id => id !== socket.id && io.sockets.sockets.get(id));
+                if (index !== -1) {
+                    partnerSocketId = queue[index];
+                    matchedTag = tag;
+                    queue.splice(index, 1); // سحب فوري من الطابور
+                    break;
                 }
             }
-            if (partnerSocketId) break;
         }
 
-        // 2. المطابقة العشوائية السريعة
+        // 2. المطابقة العشوائية الفورية (Fallback)
         if (!partnerSocketId) {
-            for (const [tag, users] of waitingUsers.entries()) {
-                for (let i = 0; i < users.length; i++) {
-                    const pId = users[i];
-                    if (pId !== socket.id && io.sockets.sockets.has(pId)) {
-                        partnerSocketId = pId;
-                        matchedTag = null; 
-                        users.splice(i, 1);
-                        break;
-                    }
+            for (const [tag, queue] of waitingUsers.entries()) {
+                const index = queue.findIndex(id => id !== socket.id && io.sockets.sockets.get(id));
+                if (index !== -1) {
+                    partnerSocketId = queue[index];
+                    matchedTag = null; 
+                    queue.splice(index, 1); // سحب فوري من الطابور
+                    break;
                 }
-                if (partnerSocketId) break;
             }
         }
 
@@ -150,19 +143,21 @@ io.on('connection', (socket) => {
             activeRooms.set(socket.id, room);
             activeRooms.set(partnerSocketId, room);
 
+            // إرسال الإشعار للطرفين في نفس اللحظة بالضبط
             io.to(socket.id).emit('matchFound', { room: room, matchedTag: matchedTag });
             io.to(partnerSocketId).emit('matchFound', { room: room, matchedTag: matchedTag });
         } else {
+            // تسجيل الدخول في الطابور بسرعة
             const waitTag = searchTags.length > 0 ? searchTags[0] : '#random';
             if (!waitingUsers.has(waitTag)) waitingUsers.set(waitTag, []);
-            if (!waitingUsers.get(waitTag).includes(socket.id)) {
-                waitingUsers.get(waitTag).push(socket.id);
-            }
+            const queue = waitingUsers.get(waitTag);
+            if (!queue.includes(socket.id)) queue.push(socket.id);
+            
             socket.emit('waitingForPartner');
         }
     });
 
-    // --- منطق الرسائل (Zero-Latency Chat) ---
+    // --- منطق الرسائل ---
     socket.on('chatMessage', (data) => {
         if (!data.message || !data.room) return;
         if (activeRooms.get(socket.id) !== data.room) return;
@@ -189,11 +184,9 @@ io.on('connection', (socket) => {
         messageLimiter.set(socket.id, recentTimestamps);
         messageHistory.set(socket.id, [cleanMessage, ...history].slice(0, 2));
 
-        // إرسال مباشر للغرفة
         socket.to(data.room).emit('chatMessage', cleanMessage);
     });
 
-    // المزامنة للهواتف
     socket.on('requestSync', () => {
         const room = activeRooms.get(socket.id);
         if (room && roomMessages.has(room)) {
@@ -214,9 +207,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('cancelSearch', () => {
-        for (const users of waitingUsers.values()) {
-            const index = users.indexOf(socket.id);
-            if (index > -1) users.splice(index, 1);
+        for (const queue of waitingUsers.values()) {
+            const index = queue.indexOf(socket.id);
+            if (index > -1) queue.splice(index, 1);
         }
     });
 
@@ -225,7 +218,6 @@ io.on('connection', (socket) => {
         if (room) socket.to(room).emit('partnerAppStateChanged', data.state);
     });
 
-    // --- الاقتراحات ---
     socket.on('submitSuggestion', (suggestion) => {
         const sanitized = suggestion.replace(/\s+/g, ' ').trim();
         if (sanitized && sanitized.length < 500) {
@@ -247,9 +239,9 @@ io.on('connection', (socket) => {
         }
         activeRooms.delete(socket.id);
 
-        for (const users of waitingUsers.values()) {
-            const index = users.indexOf(socket.id);
-            if (index > -1) users.splice(index, 1);
+        for (const queue of waitingUsers.values()) {
+            const index = queue.indexOf(socket.id);
+            if (index > -1) queue.splice(index, 1);
         }
         
         messageLimiter.delete(socket.id);

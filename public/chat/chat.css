@@ -15,14 +15,13 @@ input, textarea, button {
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* الحل الجذري لمشكلة الكيبورد: استخدام dvh لضبط الطول ديناميكياً */
 html, body {
-    height: 100vh; /* Fallback للمتصفحات القديمة */
-    height: 100dvh; /* الحل السحري لتجاوب الشاشة مع الكيبورد */
+    height: 100vh; 
+    height: 100dvh; 
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* منع التمرير الخارجي للشاشة بأكملها */
+    overflow: hidden; 
 }
 body {
     font-family: 'Tajawal', sans-serif;
@@ -46,7 +45,7 @@ body {
     display: flex; 
     flex-direction: column; 
     width: 100%; 
-    height: 100%; /* سيأخذ 100dvh من الـ body ويتقلص مع الكيبورد */
+    height: 100%; 
     background-color: transparent; 
     z-index: 10;
     padding-top: env(safe-area-inset-top); 
@@ -64,7 +63,7 @@ body {
     border-left: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
     box-shadow: 0 0 30px rgba(0,0,0,0.5);
-    position: relative; /* ضروري لتموضع لوحة الإيموجي */
+    position: relative; 
 }
 
 .chat-status { 
@@ -125,15 +124,17 @@ body {
     align-self: center; 
 }
 
-/* --- Emoji Picker Styling --- */
+/* --- Emoji Picker Styling (FIXED FOR DYNAMIC SIZING) --- */
 #emoji-picker-container {
     position: absolute;
-    bottom: 85px; /* يرتفع فوق منطقة الإدخال */
+    bottom: 85px; 
     right: 20px;
     z-index: 100;
-    width: 350px;
+    /* جعل العرض مرناً ليناسب الشاشات الصغيرة دون الخروج منها */
+    width: calc(100% - 40px);
+    max-width: 350px;
     height: 400px;
-    max-height: 50vh; /* لا يتجاوز نصف الشاشة */
+    max-height: 50vh; 
     background-color: var(--primary-color);
     border-radius: 15px;
     box-shadow: 0 -5px 25px rgba(0,0,0,0.6);
@@ -143,6 +144,7 @@ body {
     transform-origin: bottom right;
 }
 
+/* التوافق التام مع اللغة الإنجليزية LTR */
 html[dir="ltr"] #emoji-picker-container {
     right: auto;
     left: 20px;
@@ -155,7 +157,6 @@ html[dir="ltr"] #emoji-picker-container {
     transform: scale(0.95);
 }
 
-/* تخصيص ألوان مكتبة الإيموجي لتناسب التطبيق */
 emoji-picker {
     width: 100%;
     height: 100%;
@@ -170,7 +171,7 @@ emoji-picker {
 
 /* --- Chat Input Area --- */
 .chat-input-area { 
-    position: relative; /* لتأمين تموضع العناصر داخلها إذا لزم الأمر */
+    position: relative; 
     flex-shrink: 0; 
     display: flex; 
     gap: 10px; 
@@ -181,7 +182,6 @@ emoji-picker {
     align-items: center;
 }
 
-/* زر الإيموجي الجديد */
 #emoji-button {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -191,7 +191,7 @@ emoji-picker {
     font-size: 1.3rem;
     cursor: pointer;
     flex-shrink: 0;
-    height: 54px; /* ليتساوى مع حقل الإدخال */
+    height: 54px; 
 }
 #emoji-button:hover:not(:disabled), #emoji-button.active {
     background: rgba(138, 66, 255, 0.2);
@@ -283,13 +283,20 @@ html[dir="ltr"] .chat-input-area input { text-align: left; }
     
     .message-bubble { max-width: 90%; font-size: 1rem;}
     
-    /* ضبط لوحة الإيموجي للموبايل لتأخذ عرض الشاشة بشكل أجمل */
+    /* ضبط لوحة الإيموجي للموبايل بشكل محكم دون الخروج من الشاشة */
     #emoji-picker-container {
         width: 100%;
+        max-width: 100%;
         right: 0;
-        bottom: 72px; /* المسافة فوق حقل الإدخال في الموبايل */
+        left: 0; 
+        bottom: 72px; 
         border-radius: 20px 20px 0 0;
         border-left: none;
         border-right: none;
+    }
+    
+    html[dir="ltr"] #emoji-picker-container {
+        left: 0;
+        right: 0;
     }
 }
