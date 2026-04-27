@@ -16,7 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
         leaveButton: document.getElementById('leave-button'),
         confirmModal: document.getElementById('confirm-modal'),
         confirmYesBtn: document.getElementById('confirm-yes-btn'),
-        confirmNoBtn: document.getElementById('confirm-no-btn')
+        confirmNoBtn: document.getElementById('confirm-no-btn'),
+        // محددات الإيموجي الجديدة
+        emojiButton: document.getElementById('emoji-button'),
+        emojiContainer: document.getElementById('emoji-picker-container'),
+        emojiPicker: document.querySelector('emoji-picker')
     };
 
     const searchTags = JSON.parse(sessionStorage.getItem('chatchi_tags') || '[]');
@@ -89,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function filterLocalMessage(text) { return text.replace(forbiddenRegex, m => '*'.repeat(m.length)); }
 
-    // تعديل هنا لضمان النزول السلس عند إضافة رسالة
     function displayMessage(msg, type) {
         const bubble = document.createElement('div');
         bubble.className = `message-bubble ${type}`;
@@ -106,7 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
             socket.emit('chatMessage', { room: currentRoom, message: raw });
             displayMessage(filterLocalMessage(raw), 'my-message');
             DOM.inputField.value = '';
-            // ترك التركيز (Focus) لكي لا يختفي الكيبورد بعد الإرسال
+            // إخفاء الإيموجي عند الإرسال
+            closeEmojiPicker();
             DOM.inputField.focus(); 
         }
     }
@@ -126,12 +130,60 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.messagesArea.innerHTML = '';
         DOM.inputField.disabled = true;
         DOM.sendButton.disabled = true;
+        DOM.emojiButton.disabled = true; // تعطيل الإيموجي أثناء البحث
         DOM.leaveButton.disabled = false;
         DOM.chatStatus.dataset.keyStatus = 'statusSearching';
         DOM.chatStatus.dataset.matchType = '';
+        closeEmojiPicker();
         startDotAnimation();
         socket.emit('findPartner', searchTags); 
     }
+
+    // =========================================
+    // نظام الإيموجي الجديد
+    // =========================================
+    function toggleEmojiPicker(e) {
+        if(e) e.stopPropagation();
+        DOM.emojiContainer.classList.toggle('hidden-emoji');
+        DOM.emojiButton.classList.toggle('active');
+        // إذا فتحنا الإيموجي، نخفي الكيبورد ونمنع الشاشة من الارتفاع الزائد
+        if (!DOM.emojiContainer.classList.contains('hidden-emoji')) {
+            DOM.inputField.blur(); 
+        }
+    }
+
+    function closeEmojiPicker() {
+        DOM.emojiContainer.classList.add('hidden-emoji');
+        DOM.emojiButton.classList.remove('active');
+    }
+
+    // إضافة الإيموجي المختار لمربع النص
+    DOM.emojiPicker.addEventListener('emoji-click', event => {
+        const input = DOM.inputField;
+        const emoji = event.detail.unicode;
+        
+        // إدراج الإيموجي في مكان المؤشر (Cursor Position)
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const text = input.value;
+        
+        input.value = text.slice(0, start) + emoji + text.slice(end);
+        
+        // نقل المؤشر بعد الإيموجي
+        input.selectionStart = input.selectionEnd = start + emoji.length;
+        
+        // إعادة التركيز للحقل بعد وضع الإيموجي
+        input.focus();
+    });
+
+    // أحداث فتح وإغلاق لوحة الإيموجي
+    DOM.emojiButton.addEventListener('click', toggleEmojiPicker);
+
+    // إغلاق اللوحة عند النقر في أي مكان آخر (منطقة الرسائل)
+    DOM.messagesArea.addEventListener('click', closeEmojiPicker);
+    
+    // إغلاق اللوحة عند بدء الكتابة بالكيبورد الحقيقي
+    DOM.inputField.addEventListener('focus', closeEmojiPicker);
 
     applyTranslations();
     startSearching();
@@ -158,18 +210,13 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/'; 
     };
 
-    // =========================================
-    // 5. إصلاح مشكلة الكيبورد (Keyboard UI Fix)
-    // =========================================
-    
-    // عند لمس حقل الإدخال وظهور الكيبورد
+    // 5. إصلاح مشكلة الكيبورد
     DOM.inputField.addEventListener('focus', () => {
         setTimeout(() => {
             DOM.messagesArea.scrollTop = DOM.messagesArea.scrollHeight;
-        }, 300); // ننتظر 300 جزء من الثانية حتى يكتمل صعود الكيبورد بالكامل
+        }, 300);
     });
 
-    // عند تغير حجم الشاشة (تقلصها بسبب الكيبورد)
     window.addEventListener('resize', () => {
         if (document.activeElement === DOM.inputField) {
             setTimeout(() => {
@@ -177,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100);
         }
     });
-    // =========================================
 
     // 6. أحداث السيرفر (Socket)
     socket.on('matchFound', (d) => {
@@ -190,7 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.chatStatus.textContent = translations[currentLang].statusMatchFoundRandom;
             DOM.chatStatus.dataset.matchType = 'random';
         }
-        DOM.inputField.disabled = DOM.sendButton.disabled = false; 
+        // تفعيل الإدخال والأزرار بعد إيجاد الشريك
+        DOM.inputField.disabled = DOM.sendButton.disabled = DOM.emojiButton.disabled = false; 
         DOM.inputField.focus();
     });
 
@@ -198,9 +245,10 @@ document.addEventListener('DOMContentLoaded', () => {
         stopDotAnimation(); currentRoom = '';
         const key = (d?.reason === 'sudden_disconnect') ? 'partnerSuddenLeft' : 'partnerLeft';
         displayMessage(translations[currentLang][key], 'system-message');
-        DOM.inputField.disabled = DOM.sendButton.disabled = true;
+        DOM.inputField.disabled = DOM.sendButton.disabled = DOM.emojiButton.disabled = true;
         DOM.chatStatus.textContent = translations[currentLang][key];
         DOM.chatStatus.dataset.keyStatus = key;
+        closeEmojiPicker();
         autoRematchTimer = setTimeout(startSearching, 2000); 
     });
 
@@ -218,7 +266,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.Capacitor) {
         const { App } = Capacitor.Plugins;
         App.addListener('backButton', () => {
-            if (!DOM.confirmModal.classList.contains('hidden')) {
+            if (!DOM.emojiContainer.classList.contains('hidden-emoji')) {
+                closeEmojiPicker(); // إغلاق الإيموجي إذا كان مفتوحاً بدلاً من نافذة الخروج
+            }
+            else if (!DOM.confirmModal.classList.contains('hidden')) {
                 DOM.confirmModal.classList.add('hidden');
             } else {
                 DOM.confirmModal.classList.remove('hidden'); 

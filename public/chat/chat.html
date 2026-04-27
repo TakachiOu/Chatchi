@@ -19,7 +19,6 @@
   
   <link rel="stylesheet" href="/chat/chat.css">
 
-  
 </head>
 
 <body>
@@ -36,8 +35,17 @@
             <div class="messages-area">
                 </div>
             
+            <div id="emoji-picker-container" class="hidden-emoji">
+                <emoji-picker class="dark"></emoji-picker>
+            </div>
+
             <div class="chat-input-area">
+                <button id="emoji-button" title="إدراج إيموجي" disabled>
+                    <i class="fa-regular fa-face-smile"></i>
+                </button>
+                
                 <input type="text" id="chat-input-field" data-key="chatPlaceholder" placeholder="اكتب رسالتك..." disabled autocomplete="off">
+                
                 <button id="leave-button" title="إنهاء المحادثة" disabled>
                     <i class="fa-solid fa-person-walking-arrow-right"></i>
                 </button>
@@ -58,6 +66,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+    
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 
     <script src="/chat/chat.js"></script>
 

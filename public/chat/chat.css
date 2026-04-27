@@ -29,7 +29,6 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
-
 }
 
 /* --- Background Blurs --- */
@@ -46,7 +45,6 @@ body {
 #chat-view { 
     display: flex; 
     flex-direction: column; 
-    
     width: 100%; 
     height: 100%; /* سيأخذ 100dvh من الـ body ويتقلص مع الكيبورد */
     background-color: transparent; 
@@ -66,6 +64,7 @@ body {
     border-left: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
     box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    position: relative; /* ضروري لتموضع لوحة الإيموجي */
 }
 
 .chat-status { 
@@ -126,16 +125,82 @@ body {
     align-self: center; 
 }
 
+/* --- Emoji Picker Styling --- */
+#emoji-picker-container {
+    position: absolute;
+    bottom: 85px; /* يرتفع فوق منطقة الإدخال */
+    right: 20px;
+    z-index: 100;
+    width: 350px;
+    height: 400px;
+    max-height: 50vh; /* لا يتجاوز نصف الشاشة */
+    background-color: var(--primary-color);
+    border-radius: 15px;
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.6);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform-origin: bottom right;
+}
+
+html[dir="ltr"] #emoji-picker-container {
+    right: auto;
+    left: 20px;
+    transform-origin: bottom left;
+}
+
+.hidden-emoji {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95);
+}
+
+/* تخصيص ألوان مكتبة الإيموجي لتناسب التطبيق */
+emoji-picker {
+    width: 100%;
+    height: 100%;
+    --background: var(--primary-color);
+    --border-color: rgba(255, 255, 255, 0.05);
+    --indicator-color: var(--accent-color);
+    --input-border-color: rgba(138, 66, 255, 0.3);
+    --input-border-radius: 10px;
+    --button-hover-background: rgba(138, 66, 255, 0.1);
+    --button-active-background: rgba(138, 66, 255, 0.2);
+}
+
+/* --- Chat Input Area --- */
 .chat-input-area { 
+    position: relative; /* لتأمين تموضع العناصر داخلها إذا لزم الأمر */
     flex-shrink: 0; 
     display: flex; 
     gap: 10px; 
-    /* حساب المسافة السفلية بدقة لتجنب الفراغات الزائدة فوق الكيبورد */
     padding: 15px 20px max(15px, env(safe-area-inset-bottom)); 
     border-top: 1px solid var(--border-color); 
     background-color: var(--primary-color); 
     box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+    align-items: center;
 }
+
+/* زر الإيموجي الجديد */
+#emoji-button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    border-radius: 15px;
+    padding: 0 15px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    height: 54px; /* ليتساوى مع حقل الإدخال */
+}
+#emoji-button:hover:not(:disabled), #emoji-button.active {
+    background: rgba(138, 66, 255, 0.2);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    transform: translateY(-2px);
+}
+#emoji-button:disabled { background: transparent; cursor: not-allowed; opacity: 0.5; transform: none;}
+
 .chat-input-area input { 
     flex-grow: 1; 
     min-width: 0; 
@@ -146,6 +211,7 @@ body {
     padding: 15px; 
     font-size: 1.1rem; 
     text-align: right; 
+    height: 54px;
 }
 .chat-input-area input:focus {
     border-color: var(--accent-color);
@@ -154,7 +220,7 @@ body {
 }
 html[dir="ltr"] .chat-input-area input { text-align: left; }
 
-.chat-input-area button { 
+.chat-input-area button#send-button { 
     background: linear-gradient(135deg, var(--accent-color), var(--accent-dark)); 
     border: none; 
     color: white; 
@@ -163,16 +229,27 @@ html[dir="ltr"] .chat-input-area input { text-align: left; }
     padding: 0 30px; 
     cursor: pointer; 
     flex-shrink: 0; 
+    height: 54px;
     box-shadow: 0 4px 15px rgba(138, 66, 255, 0.3);
 }
-.chat-input-area button:hover:not(:disabled) {
+.chat-input-area button#send-button:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(138, 66, 255, 0.5);
 }
-.chat-input-area button:disabled { background: #3a3f51; box-shadow: none; cursor: not-allowed; transform: none; color: #818896;}
+.chat-input-area button#send-button:disabled { background: #3a3f51; box-shadow: none; cursor: not-allowed; transform: none; color: #818896;}
 
-#leave-button { background: #4a5166; font-size: 1.2rem; }
-#leave-button:hover:not(:disabled) { background: #e74c3c; box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4); }
+#leave-button { 
+    background: #4a5166; 
+    font-size: 1.2rem; 
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 0 20px;
+    height: 54px;
+    cursor: pointer;
+}
+#leave-button:hover:not(:disabled) { background: #e74c3c; box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4); transform: translateY(-2px); }
+#leave-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 /* --- Scrollbars --- */
 ::-webkit-scrollbar { width: 8px; }
@@ -197,9 +274,22 @@ html[dir="ltr"] .chat-input-area input { text-align: left; }
     .chat-container { width: 100%; border-radius: 0; border: none; }
 }
 @media (max-width: 480px) {
-    .chat-input-area { padding: 12px 15px max(12px, env(safe-area-inset-bottom)); gap: 8px; }
-    .chat-input-area input { padding: 12px; font-size: 1rem; border-radius: 12px;}
-    .chat-input-area button { padding: 0 15px; font-size: 0.95rem; border-radius: 12px;}
-    #leave-button { padding: 0 12px; }
+    .chat-input-area { padding: 12px 10px max(12px, env(safe-area-inset-bottom)); gap: 6px; }
+    
+    #emoji-button { padding: 0 12px; font-size: 1.2rem; height: 48px; border-radius: 12px; }
+    .chat-input-area input { padding: 10px; font-size: 1rem; border-radius: 12px; height: 48px; }
+    .chat-input-area button#send-button { padding: 0 15px; font-size: 0.95rem; border-radius: 12px; height: 48px; }
+    #leave-button { padding: 0 12px; height: 48px; border-radius: 12px;}
+    
     .message-bubble { max-width: 90%; font-size: 1rem;}
+    
+    /* ضبط لوحة الإيموجي للموبايل لتأخذ عرض الشاشة بشكل أجمل */
+    #emoji-picker-container {
+        width: 100%;
+        right: 0;
+        bottom: 72px; /* المسافة فوق حقل الإدخال في الموبايل */
+        border-radius: 20px 20px 0 0;
+        border-left: none;
+        border-right: none;
+    }
 }
