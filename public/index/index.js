@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     adSize: 'BANNER',
                     position: 'BOTTOM_CENTER',
                     margin: 0,
-                    isTesting: true // تذكر تغييرها لـ false عند الرفع لمتجر بلاي
+                    istesting: false // تذكر تغييرها لـ false عند الرفع لمتجر بلاي
                 };
 
                 await AdMob.showBanner(bannerOptions);
