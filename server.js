@@ -162,11 +162,21 @@ io.on('connection', (socket) => {
         if (!cleanMessage) return;
 
         // ==========================================
-        // التعديل هنا: نظام منع السبام (Anti-Spam)
+        // نظام منع السبام (Anti-Spam) وتنبيه المرسل
         // ==========================================
         const lastMessage = messageHistory.get(socket.id);
         if (cleanMessage === lastMessage) {
-            // إذا كانت الرسالة الحالية مطابقة تماماً للرسالة السابقة، نتجاهلها ولن يتم إرسالها
+            // نرسل تحذير للمرسل ولن نرسل الرسالة للطرف الآخر
+            socket.emit('spamWarning', 'duplicate');
+            return; 
+        }
+
+        const now = Date.now();
+        const userTimestamps = messageLimiter.get(socket.id) || [];
+        
+        // منع الإرسال السريع جداً
+        if (userTimestamps.length > 0 && (now - userTimestamps[userTimestamps.length - 1] < 500)) {
+            socket.emit('spamWarning', 'fast');
             return; 
         }
         // ==========================================
@@ -177,21 +187,13 @@ io.on('connection', (socket) => {
         
         if (msgs.length > 20) msgs.shift(); 
 
-        const now = Date.now();
-        const userTimestamps = messageLimiter.get(socket.id) || [];
-        
-        // حماية إضافية (Flood Control): منع إرسال رسائل متتالية بسرعة (أقل من نصف ثانية)
-        if (userTimestamps.length > 0 && (now - userTimestamps[userTimestamps.length - 1] < 500)) {
-            return; 
-        }
-
         const recentTimestamps = userTimestamps.filter(t => now - t < MESSAGE_RATE_PERIOD);
         if (recentTimestamps.length >= MESSAGE_RATE_LIMIT) return;
 
         recentTimestamps.push(now);
         messageLimiter.set(socket.id, recentTimestamps);
         
-        // تحديث آخر رسالة أرسلها المستخدم ليتم التحقق منها في المرة القادمة
+        // تحديث آخر رسالة أرسلها المستخدم
         messageHistory.set(socket.id, cleanMessage);
 
         socket.to(data.room).emit('chatMessage', cleanMessage);

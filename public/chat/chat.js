@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmModal: document.getElementById('confirm-modal'),
         confirmYesBtn: document.getElementById('confirm-yes-btn'),
         confirmNoBtn: document.getElementById('confirm-no-btn'),
-        // محددات الإيموجي الجديدة
         emojiButton: document.getElementById('emoji-button'),
         emojiContainer: document.getElementById('emoji-picker-container'),
         emojiPicker: document.querySelector('emoji-picker')
@@ -31,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const typingTimeout = 1500;
     let dotAnimationInterval;
     let autoRematchTimer;
+
+    // متغيرات نظام الحماية (Anti-Spam) في هاتف المستخدم
+    let lastSentMessage = '';
+    let lastSentTime = 0;
 
     const forbiddenWords = ['زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 'dick', 'fack', 'زك', 'ديوث','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' , '9hba','no9ch','sowa' ,'3atay' ,'bzoul' ,'zwayz','gay' ,'dyouth', 'zamal' ,'hatchoun','nhatchoun'];
     const forbiddenRegex = new RegExp(forbiddenWords.join('|'), 'gi');
@@ -50,7 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmLeaveTitle: 'هل أنت متأكد؟',
             confirmLeaveText: 'هل تريد حقاً مغادرة المحادثة للعودة للرئيسية؟',
             confirmYes: 'نعم، غادر',
-            confirmNo: 'لا، ابقَ'
+            confirmNo: 'لا، ابقَ',
+            // رسائل نظام الحماية (Anti-Spam)
+            spamDuplicate: '🚫 عذراً، لا يمكنك إرسال نفس الرسالة مرتين متتاليتين!',
+            spamFast: '⏳ الرجاء الانتظار قليلاً قبل إرسال رسالة جديدة.'
         },
         en: {
             chatPlaceholder: 'Type your message...',
@@ -65,7 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmLeaveTitle: 'Are you sure?',
             confirmLeaveText: 'Do you really want to leave and return to home?',
             confirmYes: 'Yes, Leave',
-            confirmNo: 'No, Stay'
+            confirmNo: 'No, Stay',
+            spamDuplicate: '🚫 You cannot send the exact same message twice!',
+            spamFast: '⏳ Please wait a moment before sending another message.'
         }
     };
 
@@ -103,13 +111,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 50);
     }
 
+    // =========================================
+    // نظام إرسال الرسائل مع الحماية (Anti-Spam)
+    // =========================================
     function sendMessage() {
         const raw = DOM.inputField.value.trim();
+        
         if (raw && currentRoom) {
+            const now = Date.now();
+
+            // 1. منع التكرار (Duplicate Check)
+            if (raw === lastSentMessage) {
+                displayMessage(translations[currentLang].spamDuplicate, 'system-message');
+                return; // توقيف العملية هنا، لن تُرسل الرسالة
+            }
+
+            // 2. منع الإرسال السريع جداً (Flood Control)
+            if (now - lastSentTime < 500) {
+                displayMessage(translations[currentLang].spamFast, 'system-message');
+                return; // توقيف العملية هنا
+            }
+
+            // تحديث البيانات المحلية للمرسل
+            lastSentMessage = raw;
+            lastSentTime = now;
+
+            // إذا تخطى الفحص، يتم الإرسال العادي
             socket.emit('chatMessage', { room: currentRoom, message: raw });
             displayMessage(filterLocalMessage(raw), 'my-message');
             DOM.inputField.value = '';
-            // إخفاء الإيموجي عند الإرسال
             closeEmojiPicker();
             DOM.inputField.focus(); 
         }
@@ -130,23 +160,27 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.messagesArea.innerHTML = '';
         DOM.inputField.disabled = true;
         DOM.sendButton.disabled = true;
-        DOM.emojiButton.disabled = true; // تعطيل الإيموجي أثناء البحث
+        DOM.emojiButton.disabled = true; 
         DOM.leaveButton.disabled = false;
         DOM.chatStatus.dataset.keyStatus = 'statusSearching';
         DOM.chatStatus.dataset.matchType = '';
+        
+        // إعادة تصفير نظام الحماية عند البحث عن شخص جديد
+        lastSentMessage = '';
+        lastSentTime = 0;
+
         closeEmojiPicker();
         startDotAnimation();
         socket.emit('findPartner', searchTags); 
     }
 
     // =========================================
-    // نظام الإيموجي الجديد
+    // نظام الإيموجي
     // =========================================
     function toggleEmojiPicker(e) {
         if(e) e.stopPropagation();
         DOM.emojiContainer.classList.toggle('hidden-emoji');
         DOM.emojiButton.classList.toggle('active');
-        // إذا فتحنا الإيموجي، نخفي الكيبورد ونمنع الشاشة من الارتفاع الزائد
         if (!DOM.emojiContainer.classList.contains('hidden-emoji')) {
             DOM.inputField.blur(); 
         }
@@ -157,32 +191,19 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.emojiButton.classList.remove('active');
     }
 
-    // إضافة الإيموجي المختار لمربع النص
     DOM.emojiPicker.addEventListener('emoji-click', event => {
         const input = DOM.inputField;
         const emoji = event.detail.unicode;
-        
-        // إدراج الإيموجي في مكان المؤشر (Cursor Position)
         const start = input.selectionStart;
         const end = input.selectionEnd;
         const text = input.value;
-        
         input.value = text.slice(0, start) + emoji + text.slice(end);
-        
-        // نقل المؤشر بعد الإيموجي
         input.selectionStart = input.selectionEnd = start + emoji.length;
-        
-        // إعادة التركيز للحقل بعد وضع الإيموجي
         input.focus();
     });
 
-    // أحداث فتح وإغلاق لوحة الإيموجي
     DOM.emojiButton.addEventListener('click', toggleEmojiPicker);
-
-    // إغلاق اللوحة عند النقر في أي مكان آخر (منطقة الرسائل)
     DOM.messagesArea.addEventListener('click', closeEmojiPicker);
-    
-    // إغلاق اللوحة عند بدء الكتابة بالكيبورد الحقيقي
     DOM.inputField.addEventListener('focus', closeEmojiPicker);
 
     applyTranslations();
@@ -236,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.chatStatus.textContent = translations[currentLang].statusMatchFoundRandom;
             DOM.chatStatus.dataset.matchType = 'random';
         }
-        // تفعيل الإدخال والأزرار بعد إيجاد الشريك
         DOM.inputField.disabled = DOM.sendButton.disabled = DOM.emojiButton.disabled = false; 
         DOM.inputField.focus();
     });
@@ -262,12 +282,18 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('chatMessage', (m) => displayMessage(filterLocalMessage(m), 'stranger-message'));
     socket.on('syncMessages', (msgs) => msgs.forEach(m => displayMessage(filterLocalMessage(m.message), 'stranger-message')));
 
+    // استقبال تحذير من السيرفر كطبقة حماية إضافية
+    socket.on('spamWarning', (type) => {
+        const msg = type === 'duplicate' ? translations[currentLang].spamDuplicate : translations[currentLang].spamFast;
+        displayMessage(msg, 'system-message');
+    });
+
     // 7. Capacitor
     if (window.Capacitor) {
         const { App } = Capacitor.Plugins;
         App.addListener('backButton', () => {
             if (!DOM.emojiContainer.classList.contains('hidden-emoji')) {
-                closeEmojiPicker(); // إغلاق الإيموجي إذا كان مفتوحاً بدلاً من نافذة الخروج
+                closeEmojiPicker(); 
             }
             else if (!DOM.confirmModal.classList.contains('hidden')) {
                 DOM.confirmModal.classList.add('hidden');
