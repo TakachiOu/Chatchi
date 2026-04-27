@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const APP_VERSION = "1.1.0"; // إصدار هذه النسخة من التطبيق حالياً
+    const APP_VERSION = "1.0.0"; // إصدار هذه النسخة من التطبيق حالياً
 
     // 1. محددات العناصر
     const DOM = {
