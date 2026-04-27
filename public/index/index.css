@@ -17,21 +17,24 @@ input, textarea, button {
 
 html, body {
     height: 100%;
-    min-height: 100dvh; /* ضمان الطول الديناميكي للتوافق مع الهواتف الحديثة */
+    /* استخدام fallback للمتصفحات القديمة ثم dvh للحديثة */
+    min-height: 100vh;
+    min-height: 100dvh;
     scroll-behavior: smooth;
-    overflow-x: hidden; 
+    overflow-x: hidden;
+    background-color: var(--bg-color);
 }
+
 body {
     font-family: 'Tajawal', sans-serif;
-    background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
     
-    /* هذا هو السحر: جعل الواجهة تحترم الكاميرا والأزرار من كل الجهات */
-    padding-top: env(safe-area-inset-top); 
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    /* الحسابات الرياضية الدقيقة لحماية الواجهة من الكاميرا وأزرار النظام */
+    padding-top: env(safe-area-inset-top, 0px); 
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
 }
 
 /* --- Background & Header --- */
@@ -42,7 +45,14 @@ body {
 @keyframes moveOrb1 { from { transform: translate(0, 0); } to { transform: translate(100px, 50px); } }
 @keyframes moveOrb2 { from { transform: translate(0, 0); } to { transform: translate(-80px, -60px); } }
 
-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 8%; flex-wrap: wrap; gap: 15px; }
+header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 20px 8%; 
+    flex-wrap: wrap; 
+    gap: 15px; 
+}
 .logo { font-size: 2rem; font-weight: 700; text-shadow: 0 0 10px rgba(138, 66, 255, 0.3); }
 .logo span { color: var(--accent-color); }
 
@@ -67,9 +77,13 @@ header { display: flex; justify-content: space-between; align-items: center; pad
 }
 
 /* --- Main View Content --- */
-#main-view { width: 100%; min-height: 100vh; }
+#main-view { 
+    width: 100%; 
+    /* حساب رياضي لمنع اختفاء المحتوى خلف أزرار التنقل السفلية */
+    min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); 
+}
 .container { padding: 0 8%; width: 100%; }
-.hero { text-align: center; padding: 80px 0; width: 100%; }
+.hero { text-align: center; padding: 60px 0; width: 100%; }
 .main-title { font-size: 3.8rem; text-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 15px;}
 .subtitle { font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 40px; width: 100%; }
 
@@ -162,7 +176,7 @@ html[dir="ltr"] .rules-list li::before { right: auto; left: 0; }
 @keyframes glowText { from { text-shadow: 0 0 5px var(--accent-color); } to { text-shadow: 0 0 15px var(--accent-color); } }
 @keyframes sparkBlink { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
 
-/* --- Force Update Modal Styling (Neon & Professional) --- */
+/* --- Force Update Modal Styling --- */
 .update-overlay {
     position: fixed;
     top: 0;
