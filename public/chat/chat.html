@@ -30,7 +30,13 @@
 
     <div id="chat-view">
         <div class="chat-container">
-            <p class="chat-status" data-key-status>جارٍ تهيئة الاتصال...</p>
+            
+            <div class="chat-header">
+                <p class="chat-status" data-key-status>جارٍ تهيئة الاتصال...</p>
+                <button id="leave-home-button" title="العودة للرئيسية">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
             
             <div class="messages-area">
                 </div>
@@ -44,11 +50,12 @@
                     <i class="fa-regular fa-face-smile"></i>
                 </button>
                 
+                <button id="skip-button" title="تخطي والبحث عن غريب آخر" disabled>
+                    <i class="fa-solid fa-forward-step"></i>
+                </button>
+                
                 <input type="text" id="chat-input-field" data-key="chatPlaceholder" placeholder="اكتب رسالتك..." disabled autocomplete="off">
                 
-                <button id="leave-button" title="إنهاء المحادثة" disabled>
-                    <i class="fa-solid fa-person-walking-arrow-right"></i>
-                </button>
                 <button id="send-button" data-key="chatSendBtn" disabled>إرسال</button>
             </div>
         </div>

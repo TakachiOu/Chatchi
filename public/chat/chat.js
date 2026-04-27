@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesArea: document.querySelector('.messages-area'),
         inputField: document.getElementById('chat-input-field'),
         sendButton: document.getElementById('send-button'),
-        leaveButton: document.getElementById('leave-button'),
+        skipButton: document.getElementById('skip-button'), // إضافة زر التخطي
+        leaveHomeButton: document.getElementById('leave-home-button'), // تعديل زر الخروج ليطابق الهيدر
         confirmModal: document.getElementById('confirm-modal'),
         confirmYesBtn: document.getElementById('confirm-yes-btn'),
         confirmNoBtn: document.getElementById('confirm-no-btn'),
@@ -161,7 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.inputField.disabled = true;
         DOM.sendButton.disabled = true;
         DOM.emojiButton.disabled = true; 
-        DOM.leaveButton.disabled = false;
+        DOM.skipButton.disabled = true; // تعطيل زر التخطي أثناء البحث
+        DOM.leaveHomeButton.disabled = false; // تفعيل زر الخروج للرئيسية
         DOM.chatStatus.dataset.keyStatus = 'statusSearching';
         DOM.chatStatus.dataset.matchType = '';
         
@@ -172,6 +174,19 @@ document.addEventListener('DOMContentLoaded', () => {
         closeEmojiPicker();
         startDotAnimation();
         socket.emit('findPartner', searchTags); 
+    }
+
+    // =========================================
+    // وظيفة التخطي السريع (Skip)
+    // =========================================
+    function handleSkip() {
+        if (currentRoom) {
+            socket.emit('leaveRoom', currentRoom);
+            currentRoom = '';
+        } else {
+            socket.emit('cancelSearch');
+        }
+        startSearching();
     }
 
     // =========================================
@@ -211,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. أحداث المستخدم
     DOM.sendButton.onclick = sendMessage;
+    DOM.skipButton.onclick = handleSkip; // ربط زر التخطي بالوظيفة
     DOM.inputField.onkeyup = (e) => { if (e.key === 'Enter') sendMessage(); };
 
     DOM.inputField.oninput = () => {
@@ -221,7 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else socket.emit('userStoppedTyping', { room: currentRoom });
     };
 
-    DOM.leaveButton.onclick = () => DOM.confirmModal.classList.remove('hidden');
+    // ربط زر العودة للرئيسية العلوي بنافذة التأكيد
+    DOM.leaveHomeButton.onclick = () => DOM.confirmModal.classList.remove('hidden');
     DOM.confirmNoBtn.onclick = () => DOM.confirmModal.classList.add('hidden');
     
     DOM.confirmYesBtn.onclick = () => {
@@ -257,7 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.chatStatus.textContent = translations[currentLang].statusMatchFoundRandom;
             DOM.chatStatus.dataset.matchType = 'random';
         }
-        DOM.inputField.disabled = DOM.sendButton.disabled = DOM.emojiButton.disabled = false; 
+        // تفعيل زر التخطي عند إيجاد الشريك
+        DOM.inputField.disabled = DOM.sendButton.disabled = DOM.emojiButton.disabled = DOM.skipButton.disabled = false; 
         DOM.inputField.focus();
     });
 
@@ -266,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const key = (d?.reason === 'sudden_disconnect') ? 'partnerSuddenLeft' : 'partnerLeft';
         displayMessage(translations[currentLang][key], 'system-message');
         DOM.inputField.disabled = DOM.sendButton.disabled = DOM.emojiButton.disabled = true;
+        DOM.skipButton.disabled = false; // السماح بعمل تخطي يدوي إذا أراد المستخدم عدم الانتظار
         DOM.chatStatus.textContent = translations[currentLang][key];
         DOM.chatStatus.dataset.keyStatus = key;
         closeEmojiPicker();

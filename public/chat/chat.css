@@ -66,14 +66,36 @@ body {
     position: relative; 
 }
 
+/* --- NEW Header & Status Styling --- */
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: rgba(13, 15, 24, 0.7);
+    border-bottom: 1px solid rgba(138, 66, 255, 0.2);
+    flex-shrink: 0;
+}
+
 .chat-status { 
-    flex-shrink: 0; 
-    padding: 15px; 
-    text-align: center; 
     color: var(--text-muted); 
-    border-bottom: 1px solid rgba(138, 66, 255, 0.2); 
-    background-color: rgba(13, 15, 24, 0.5);
+    font-size: 0.95rem;
     word-wrap: break-word; 
+    margin: 0;
+}
+
+#leave-home-button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+#leave-home-button:hover {
+    color: #ff4757;
+    background: rgba(255, 71, 87, 0.1);
 }
 
 .messages-area { 
@@ -124,13 +146,12 @@ body {
     align-self: center; 
 }
 
-/* --- Emoji Picker Styling (FIXED FOR DYNAMIC SIZING) --- */
+/* --- Emoji Picker Styling --- */
 #emoji-picker-container {
     position: absolute;
     bottom: 85px; 
     right: 20px;
     z-index: 100;
-    /* جعل العرض مرناً ليناسب الشاشات الصغيرة دون الخروج منها */
     width: calc(100% - 40px);
     max-width: 350px;
     height: 400px;
@@ -144,7 +165,6 @@ body {
     transform-origin: bottom right;
 }
 
-/* التوافق التام مع اللغة الإنجليزية LTR */
 html[dir="ltr"] #emoji-picker-container {
     right: auto;
     left: 20px;
@@ -201,6 +221,27 @@ emoji-picker {
 }
 #emoji-button:disabled { background: transparent; cursor: not-allowed; opacity: 0.5; transform: none;}
 
+/* --- NEW Skip Button Styling --- */
+#skip-button { 
+    background: #ffa502; 
+    font-size: 1.2rem; 
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 0 15px;
+    height: 54px;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(255, 165, 2, 0.3);
+}
+#skip-button:hover:not(:disabled) { 
+    background: #ffb142; 
+    box-shadow: 0 6px 15px rgba(255, 165, 2, 0.5); 
+    transform: translateY(-2px); 
+}
+#skip-button:disabled { background: #5a5f73; box-shadow: none; cursor: not-allowed; opacity: 0.5; transform: none; color: #a1a8b6;}
+
+
 .chat-input-area input { 
     flex-grow: 1; 
     min-width: 0; 
@@ -238,19 +279,6 @@ html[dir="ltr"] .chat-input-area input { text-align: left; }
 }
 .chat-input-area button#send-button:disabled { background: #3a3f51; box-shadow: none; cursor: not-allowed; transform: none; color: #818896;}
 
-#leave-button { 
-    background: #4a5166; 
-    font-size: 1.2rem; 
-    color: white;
-    border: none;
-    border-radius: 15px;
-    padding: 0 20px;
-    height: 54px;
-    cursor: pointer;
-}
-#leave-button:hover:not(:disabled) { background: #e74c3c; box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4); transform: translateY(-2px); }
-#leave-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
 /* --- Scrollbars --- */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: rgba(27, 30, 47, 0.3); border-radius: 10px; }
@@ -277,13 +305,12 @@ html[dir="ltr"] .chat-input-area input { text-align: left; }
     .chat-input-area { padding: 12px 10px max(12px, env(safe-area-inset-bottom)); gap: 6px; }
     
     #emoji-button { padding: 0 12px; font-size: 1.2rem; height: 48px; border-radius: 12px; }
+    #skip-button { padding: 0 12px; font-size: 1rem; height: 48px; border-radius: 12px; }
     .chat-input-area input { padding: 10px; font-size: 1rem; border-radius: 12px; height: 48px; }
     .chat-input-area button#send-button { padding: 0 15px; font-size: 0.95rem; border-radius: 12px; height: 48px; }
-    #leave-button { padding: 0 12px; height: 48px; border-radius: 12px;}
     
     .message-bubble { max-width: 90%; font-size: 1rem;}
     
-    /* ضبط لوحة الإيموجي للموبايل بشكل محكم دون الخروج من الشاشة */
     #emoji-picker-container {
         width: 100%;
         max-width: 100%;

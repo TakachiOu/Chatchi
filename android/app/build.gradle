@@ -3,6 +3,17 @@ apply plugin: 'com.android.application'
 android {
     namespace "com.takachi.chatchi"
     compileSdk rootProject.ext.compileSdkVersion
+
+    // 1. إضافة إعدادات التوقيع هنا (Signing Configs)
+    signingConfigs {
+        release {
+            storeFile file('chatchi-upload-key.jks')
+            storePassword 'Abdou@Asa/123xxx'
+            keyAlias 'chatchi-alias'
+            keyPassword 'Abdou@Asa/123xxx'
+        }
+    }
+
     defaultConfig {
         applicationId "com.takachi.chatchi"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -20,6 +31,8 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // 2. ربط التوقيع بنسخة الإصدار (Release)
+            signingConfig signingConfigs.release
         }
     }
 }
