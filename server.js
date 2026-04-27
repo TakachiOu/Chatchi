@@ -106,7 +106,6 @@ io.on('connection', (socket) => {
         let partnerSocketId = null;
         let matchedTag = null;
 
-        // 1. المطابقة الدقيقة الفورية (O(1) Time Complexity)
         for (const tag of searchTags) {
             const queue = waitingUsers.get(tag);
             if (queue && queue.length > 0) {
@@ -114,20 +113,19 @@ io.on('connection', (socket) => {
                 if (index !== -1) {
                     partnerSocketId = queue[index];
                     matchedTag = tag;
-                    queue.splice(index, 1); // سحب فوري من الطابور
+                    queue.splice(index, 1); 
                     break;
                 }
             }
         }
 
-        // 2. المطابقة العشوائية الفورية (Fallback)
         if (!partnerSocketId) {
             for (const [tag, queue] of waitingUsers.entries()) {
                 const index = queue.findIndex(id => id !== socket.id && io.sockets.sockets.get(id));
                 if (index !== -1) {
                     partnerSocketId = queue[index];
                     matchedTag = null; 
-                    queue.splice(index, 1); // سحب فوري من الطابور
+                    queue.splice(index, 1); 
                     break;
                 }
             }
@@ -143,11 +141,9 @@ io.on('connection', (socket) => {
             activeRooms.set(socket.id, room);
             activeRooms.set(partnerSocketId, room);
 
-            // إرسال الإشعار للطرفين في نفس اللحظة بالضبط
             io.to(socket.id).emit('matchFound', { room: room, matchedTag: matchedTag });
             io.to(partnerSocketId).emit('matchFound', { room: room, matchedTag: matchedTag });
         } else {
-            // تسجيل الدخول في الطابور بسرعة
             const waitTag = searchTags.length > 0 ? searchTags[0] : '#random';
             if (!waitingUsers.has(waitTag)) waitingUsers.set(waitTag, []);
             const queue = waitingUsers.get(waitTag);
@@ -165,24 +161,38 @@ io.on('connection', (socket) => {
         const cleanMessage = filterAndSanitize(data.message);
         if (!cleanMessage) return;
 
+        // ==========================================
+        // التعديل هنا: نظام منع السبام (Anti-Spam)
+        // ==========================================
+        const lastMessage = messageHistory.get(socket.id);
+        if (cleanMessage === lastMessage) {
+            // إذا كانت الرسالة الحالية مطابقة تماماً للرسالة السابقة، نتجاهلها ولن يتم إرسالها
+            return; 
+        }
+        // ==========================================
+
         if (!roomMessages.has(data.room)) roomMessages.set(data.room, []);
         const msgs = roomMessages.get(data.room);
         msgs.push({ senderId: socket.id, message: cleanMessage, timestamp: Date.now() });
         
         if (msgs.length > 20) msgs.shift(); 
 
-        const history = messageHistory.get(socket.id) || [];
-        if (cleanMessage === history[0] && cleanMessage === history[1]) return;
-
         const now = Date.now();
         const userTimestamps = messageLimiter.get(socket.id) || [];
-        const recentTimestamps = userTimestamps.filter(t => now - t < MESSAGE_RATE_PERIOD);
         
+        // حماية إضافية (Flood Control): منع إرسال رسائل متتالية بسرعة (أقل من نصف ثانية)
+        if (userTimestamps.length > 0 && (now - userTimestamps[userTimestamps.length - 1] < 500)) {
+            return; 
+        }
+
+        const recentTimestamps = userTimestamps.filter(t => now - t < MESSAGE_RATE_PERIOD);
         if (recentTimestamps.length >= MESSAGE_RATE_LIMIT) return;
 
         recentTimestamps.push(now);
         messageLimiter.set(socket.id, recentTimestamps);
-        messageHistory.set(socket.id, [cleanMessage, ...history].slice(0, 2));
+        
+        // تحديث آخر رسالة أرسلها المستخدم ليتم التحقق منها في المرة القادمة
+        messageHistory.set(socket.id, cleanMessage);
 
         socket.to(data.room).emit('chatMessage', cleanMessage);
     });
