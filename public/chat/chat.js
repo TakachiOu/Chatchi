@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesArea: document.querySelector('.messages-area'),
         inputField: document.getElementById('chat-input-field'),
         sendButton: document.getElementById('send-button'),
-        skipButton: document.getElementById('skip-button'), // إضافة زر التخطي
-        leaveHomeButton: document.getElementById('leave-home-button'), // تعديل زر الخروج ليطابق الهيدر
+        skipButton: document.getElementById('skip-button'), 
+        leaveHomeButton: document.getElementById('leave-home-button'), 
         confirmModal: document.getElementById('confirm-modal'),
         confirmYesBtn: document.getElementById('confirm-yes-btn'),
         confirmNoBtn: document.getElementById('confirm-no-btn'),
@@ -133,6 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; // توقيف العملية هنا
             }
 
+            // إلغاء وضع "التخطي" إذا أرسل المستخدم رسالة (التراجع عن التخطي)
+            DOM.skipButton.classList.remove('confirm-skip');
+
             // تحديث البيانات المحلية للمرسل
             lastSentMessage = raw;
             lastSentTime = now;
@@ -162,7 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.inputField.disabled = true;
         DOM.sendButton.disabled = true;
         DOM.emojiButton.disabled = true; 
-        DOM.skipButton.disabled = true; // تعطيل زر التخطي أثناء البحث
+        
+        // إعادة ضبط حالة زر التخطي وتوقيفه أثناء البحث
+        DOM.skipButton.disabled = true; 
+        DOM.skipButton.classList.remove('confirm-skip');
+        
         DOM.leaveHomeButton.disabled = false; // تفعيل زر الخروج للرئيسية
         DOM.chatStatus.dataset.keyStatus = 'statusSearching';
         DOM.chatStatus.dataset.matchType = '';
@@ -177,9 +184,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================
-    // وظيفة التخطي السريع (Skip)
+    // وظيفة التخطي السريع (Skip) بضغطة مزدوجة
     // =========================================
     function handleSkip() {
+        // التحقق مما إذا كان الزر في حالة التحذير (الضغطة الأولى)
+        if (!DOM.skipButton.classList.contains('confirm-skip')) {
+            // الضغطة الأولى: تفعيل وضع التحذير فقط
+            DOM.skipButton.classList.add('confirm-skip');
+            return; // إيقاف التنفيذ هنا
+        }
+
+        // الضغطة الثانية: تنفيذ التخطي وإلغاء حالة التحذير
+        DOM.skipButton.classList.remove('confirm-skip');
+        
         if (currentRoom) {
             socket.emit('leaveRoom', currentRoom);
             currentRoom = '';
@@ -226,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. أحداث المستخدم
     DOM.sendButton.onclick = sendMessage;
-    DOM.skipButton.onclick = handleSkip; // ربط زر التخطي بالوظيفة
+    DOM.skipButton.onclick = handleSkip; // ربط زر التخطي بوظيفة الضغطة المزدوجة
     DOM.inputField.onkeyup = (e) => { if (e.key === 'Enter') sendMessage(); };
 
     DOM.inputField.oninput = () => {
@@ -285,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         displayMessage(translations[currentLang][key], 'system-message');
         DOM.inputField.disabled = DOM.sendButton.disabled = DOM.emojiButton.disabled = true;
         DOM.skipButton.disabled = false; // السماح بعمل تخطي يدوي إذا أراد المستخدم عدم الانتظار
+        DOM.skipButton.classList.remove('confirm-skip'); // إعادة حالة الزر للطبيعي
         DOM.chatStatus.textContent = translations[currentLang][key];
         DOM.chatStatus.dataset.keyStatus = key;
         closeEmojiPicker();

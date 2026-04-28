@@ -92,10 +92,12 @@ body {
     cursor: pointer;
     padding: 5px 10px;
     border-radius: 8px;
+    transition: all 0.2s ease;
 }
-#leave-home-button:hover {
+#leave-home-button:hover, #leave-home-button:active {
     color: #ff4757;
     background: rgba(255, 71, 87, 0.1);
+    transform: scale(0.95);
 }
 
 .messages-area { 
@@ -219,27 +221,48 @@ emoji-picker {
     color: var(--accent-color);
     transform: translateY(-2px);
 }
-#emoji-button:disabled { background: transparent; cursor: not-allowed; opacity: 0.5; transform: none;}
+#emoji-button:disabled { background: transparent; border-color: rgba(255, 255, 255, 0.05); cursor: not-allowed; opacity: 0.5; transform: none;}
 
-/* --- NEW Skip Button Styling --- */
+/* --- Skip Button Styling (Updated for Theme & Double Click) --- */
 #skip-button { 
-    background: #ffa502; 
+    background: rgba(255, 255, 255, 0.05); /* متناسق مع الديزاين الأساسي */
+    border: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 1.2rem; 
-    color: white;
-    border: none;
+    color: var(--text-color);
     border-radius: 15px;
     padding: 0 15px;
     height: 54px;
     cursor: pointer;
     flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(255, 165, 2, 0.3);
 }
 #skip-button:hover:not(:disabled) { 
-    background: #ffb142; 
-    box-shadow: 0 6px 15px rgba(255, 165, 2, 0.5); 
+    background: rgba(138, 66, 255, 0.2);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
     transform: translateY(-2px); 
 }
-#skip-button:disabled { background: #5a5f73; box-shadow: none; cursor: not-allowed; opacity: 0.5; transform: none; color: #a1a8b6;}
+#skip-button:disabled { 
+    background: transparent; 
+    border-color: rgba(255, 255, 255, 0.05); 
+    cursor: not-allowed; 
+    opacity: 0.5; 
+    transform: none; 
+    color: #a1a8b6;
+}
+
+/* حالة التأكيد (الضغطة الأولى للسكيب) */
+#skip-button.confirm-skip {
+    background: rgba(231, 76, 60, 0.2); /* أحمر خفيف للتنبيه */
+    border-color: #e74c3c;
+    color: #e74c3c;
+    animation: pulseWarning 1s infinite;
+}
+
+@keyframes pulseWarning {
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
 
 
 .chat-input-area input { 
