@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // 1. الاتصال والمحددات
-    const socket = io("https://chatchi.onrender.com", {
+    const socket = io("https://chatchi-ik3p.onrender.com", {
         transports: ['websocket'], 
         upgrade: false
     });

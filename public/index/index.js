@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
         if (isNativeApp) {
             try {
-                const response = await fetch('https://chatchi.onrender.com/api/app-version');
+                const response = await fetch('https://chatchi-ik3p.onrender.com/api/app-version');
                 const data = await response.json();
                 if (data.forceUpdate && data.latestVersion !== APP_VERSION) {
                     showUpdateModal(data.playStoreUrl);
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const shareText = currentLang === 'ar' 
                 ? 'جرب تطبيق Chatchi! أفضل مساحة آمنة للدردشة المجهولة والعشوائية. ادخل الآن:' 
                 : 'Try Chatchi! The best safe space for anonymous and random chats. Check it out:';
-            const shareUrl = 'https://chatchi.onrender.com';
+            const shareUrl = 'https://chatchi-ik3p.onrender.com';
 
             const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
 

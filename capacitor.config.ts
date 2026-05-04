@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'Chatchi',
   webDir: 'public',
   server: {
-    url: 'https://chatchi.onrender.com/',
+    url: 'https://chatchi-ik3p.onrender.com/',
     androidScheme: 'https'
   },
   plugins: {
