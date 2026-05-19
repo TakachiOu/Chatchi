@@ -1,76 +1,61 @@
-// server.js - Chatchi Server: Secure, Fast, and Personalized
+// server.js - Chatchi Server: Secure, Fast, and Personalized (Multi-Tag + GeoIP Flags)
 const express = require('express');
 const http = require('http');
 const path = require('path');
 const { Server } = require("socket.io");
 const cors = require('cors');
-const nodemailer = require('nodemailer'); 
+const nodemailer = require('nodemailer');
+const geoip = require('geoip-lite'); // مكتبة تحديد المواقع
 
 const app = express();
 app.use(cors());
 
 // ==========================================
-// 1. السماح بقراءة الملفات الثابتة (CSS / JS / Images / SEO)
+// 1. السماح بقراءة الملفات الثابتة
 // ==========================================
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/assets', express.static(path.join(__dirname, 'assets'))); 
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // ==========================================
-// 2. الروابط الاحترافية النظيفة (Clean URLs)
+// 2. الروابط الاحترافية
 // ==========================================
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index', 'index.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index', 'index.html')));
+app.get('/chat', (req, res) => res.sendFile(path.join(__dirname, 'public', 'chat', 'chat.html')));
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy', 'privacy.html')));
 
-app.get('/chat', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'chat', 'chat.html'));
-});
-
-app.get('/privacy', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'privacy', 'privacy.html'));
-});
-
-// ==========================================
-// 3. نظام الإجبار على التحديث (Force Update)
-// ==========================================
 app.get('/api/app-version', (req, res) => {
     res.json({
-        latestVersion: "1.0.0", 
-        forceUpdate: true, 
-        playStoreUrl: "https://play.google.com/store/apps/details?id=com.chatchi.app" 
+        latestVersion: "1.0.0",
+        forceUpdate: true,
+        playStoreUrl: "https://play.google.com/store/apps/details?id=com.takachi.chatchiandroid"
     });
 });
 
 const server = http.createServer(app);
 
 // ==========================================
-// 4. إعدادات Socket.io (محسنة للسرعة القصوى)
+// 3. إعدادات Socket.io
 // ==========================================
 const io = new Server(server, {
-  cors: {
-    origin: "*", 
-    methods: ["GET", "POST"]
-  },
-  pingTimeout: 15000,  
-  pingInterval: 10000, 
-  perMessageDeflate: false 
+  cors: { origin: "*", methods: ["GET", "POST"] },
+  pingTimeout: 15000,
+  pingInterval: 10000,
+  perMessageDeflate: false
 });
 
 const PORT = process.env.PORT || 3000;
 
-// --- إعداد Nodemailer ---
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER, 
-    pass: process.env.EMAIL_PASS  
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
-// --- إعدادات الفلترة والحماية ---
 const forbiddenWords = [
-    'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس', 
-    'dick', 'fack', 'زك', 'ديوث','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' , 
+    'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'موجب', 'سالب', 'كس',
+    'dick', 'fack', 'زك', 'ديوث','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' ,
     '9hba','no9ch','sowa' ,'3atay' ,'bzoul' ,'zwayz','gay' ,'dyouth', 'zamal' ,'nhatchoun'
 ];
 
@@ -84,25 +69,56 @@ function filterAndSanitize(text) {
     return sanitized;
 }
 
-// قواعد البيانات المؤقتة السريعة (RAM Cache)
-const messageLimiter = new Map();
-const MESSAGE_RATE_LIMIT = 20; 
-const MESSAGE_RATE_PERIOD = 60 * 1000; 
-const roomMessages = new Map(); 
-const messageHistory = new Map(); 
-const waitingUsers = new Map();  
-const activeRooms = new Map();   
+// ==========================================
+// نظام تحويل كود الدولة إلى علم إيموجي
+// ==========================================
+function getFlagEmoji(countryCode) {
+    if (!countryCode) return '🌍'; // علم افتراضي للكرة الأرضية إذا لم يتم التعرف على الدولة
+    const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt());
+    return String.fromCodePoint(...codePoints);
+}
 
-// --- Main Connection Handler ---
+const messageLimiter = new Map();
+const MESSAGE_RATE_LIMIT = 20;
+const MESSAGE_RATE_PERIOD = 60 * 1000;
+const roomMessages = new Map();
+const messageHistory = new Map();
+const waitingUsers = new Map();
+const activeRooms = new Map();
+
+// 🛑 دالة للحذف من كل قوائم الانتظار 🛑
+function removeUserFromAllQueues(socketId) {
+    for (const [tag, queue] of waitingUsers.entries()) {
+        const index = queue.indexOf(socketId);
+        if (index > -1) {
+            queue.splice(index, 1);
+        }
+    }
+}
+
 io.on('connection', (socket) => {
     io.emit('updateOnlineUsers', io.engine.clientsCount);
 
-    // --- منطق البحث عن شريك (Ultra-Fast Matching System) ---
+    // ==========================================
+    // جلب الـ IP وتحويله إلى علم بمجرد الاتصال
+    // ==========================================
+    let clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+    if (clientIp.includes('::ffff:')) {
+        clientIp = clientIp.split('::ffff:')[1];
+    }
+    const geo = geoip.lookup(clientIp);
+    const countryCode = geo ? geo.country : null;
+    socket.flag = getFlagEmoji(countryCode); // حفظ العلم في بيانات المتصل
+
+    // --- منطق البحث (Multi-Tag) ---
     socket.on('findPartner', (tags) => {
-        const searchTags = Array.isArray(tags) 
+        const searchTags = Array.isArray(tags)
             ? tags.map(t => typeof t === 'string' ? t.toLowerCase().trim() : t).filter(t => t !== "")
             : [];
-            
+
         let partnerSocketId = null;
         let matchedTag = null;
 
@@ -113,7 +129,6 @@ io.on('connection', (socket) => {
                 if (index !== -1) {
                     partnerSocketId = queue[index];
                     matchedTag = tag;
-                    queue.splice(index, 1); 
                     break;
                 }
             }
@@ -124,36 +139,44 @@ io.on('connection', (socket) => {
                 const index = queue.findIndex(id => id !== socket.id && io.sockets.sockets.get(id));
                 if (index !== -1) {
                     partnerSocketId = queue[index];
-                    matchedTag = null; 
-                    queue.splice(index, 1); 
+                    matchedTag = null;
                     break;
                 }
             }
         }
 
         if (partnerSocketId) {
+            removeUserFromAllQueues(socket.id);
+            removeUserFromAllQueues(partnerSocketId);
+
             const partnerSocket = io.sockets.sockets.get(partnerSocketId);
             const room = `room-${socket.id}-${partnerSocketId}`;
-            
+
             partnerSocket.join(room);
             socket.join(room);
 
             activeRooms.set(socket.id, room);
             activeRooms.set(partnerSocketId, room);
 
-            io.to(socket.id).emit('matchFound', { room: room, matchedTag: matchedTag });
-            io.to(partnerSocketId).emit('matchFound', { room: room, matchedTag: matchedTag });
+            // إرسال البيانات بالإضافة لعلم الطرف الآخر لكل مستخدم
+            io.to(socket.id).emit('matchFound', { room: room, matchedTag: matchedTag, partnerFlag: partnerSocket.flag });
+            io.to(partnerSocketId).emit('matchFound', { room: room, matchedTag: matchedTag, partnerFlag: socket.flag });
         } else {
-            const waitTag = searchTags.length > 0 ? searchTags[0] : '#random';
-            if (!waitingUsers.has(waitTag)) waitingUsers.set(waitTag, []);
-            const queue = waitingUsers.get(waitTag);
-            if (!queue.includes(socket.id)) queue.push(socket.id);
-            
+            if (searchTags.length > 0) {
+                for (const tag of searchTags) {
+                    if (!waitingUsers.has(tag)) waitingUsers.set(tag, []);
+                    const queue = waitingUsers.get(tag);
+                    if (!queue.includes(socket.id)) queue.push(socket.id);
+                }
+            } else {
+                if (!waitingUsers.has('#random')) waitingUsers.set('#random', []);
+                const queue = waitingUsers.get('#random');
+                if (!queue.includes(socket.id)) queue.push(socket.id);
+            }
             socket.emit('waitingForPartner');
         }
     });
 
-    // --- منطق الرسائل ---
     socket.on('chatMessage', (data) => {
         if (!data.message || !data.room) return;
         if (activeRooms.get(socket.id) !== data.room) return;
@@ -161,39 +184,32 @@ io.on('connection', (socket) => {
         const cleanMessage = filterAndSanitize(data.message);
         if (!cleanMessage) return;
 
-        // ==========================================
-        // نظام منع السبام (Anti-Spam) وتنبيه المرسل
-        // ==========================================
         const lastMessage = messageHistory.get(socket.id);
         if (cleanMessage === lastMessage) {
-            // نرسل تحذير للمرسل ولن نرسل الرسالة للطرف الآخر
             socket.emit('spamWarning', 'duplicate');
-            return; 
+            return;
         }
 
         const now = Date.now();
         const userTimestamps = messageLimiter.get(socket.id) || [];
-        
-        // منع الإرسال السريع جداً
+
         if (userTimestamps.length > 0 && (now - userTimestamps[userTimestamps.length - 1] < 500)) {
             socket.emit('spamWarning', 'fast');
-            return; 
+            return;
         }
-        // ==========================================
 
         if (!roomMessages.has(data.room)) roomMessages.set(data.room, []);
         const msgs = roomMessages.get(data.room);
         msgs.push({ senderId: socket.id, message: cleanMessage, timestamp: Date.now() });
-        
-        if (msgs.length > 20) msgs.shift(); 
+
+        if (msgs.length > 20) msgs.shift();
 
         const recentTimestamps = userTimestamps.filter(t => now - t < MESSAGE_RATE_PERIOD);
         if (recentTimestamps.length >= MESSAGE_RATE_LIMIT) return;
 
         recentTimestamps.push(now);
         messageLimiter.set(socket.id, recentTimestamps);
-        
-        // تحديث آخر رسالة أرسلها المستخدم
+
         messageHistory.set(socket.id, cleanMessage);
 
         socket.to(data.room).emit('chatMessage', cleanMessage);
@@ -219,10 +235,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('cancelSearch', () => {
-        for (const queue of waitingUsers.values()) {
-            const index = queue.indexOf(socket.id);
-            if (index > -1) queue.splice(index, 1);
-        }
+        removeUserFromAllQueues(socket.id);
     });
 
     socket.on('updateAppState', (data) => {
@@ -251,11 +264,8 @@ io.on('connection', (socket) => {
         }
         activeRooms.delete(socket.id);
 
-        for (const queue of waitingUsers.values()) {
-            const index = queue.indexOf(socket.id);
-            if (index > -1) queue.splice(index, 1);
-        }
-        
+        removeUserFromAllQueues(socket.id);
+
         messageLimiter.delete(socket.id);
         messageHistory.delete(socket.id);
         io.emit('updateOnlineUsers', io.engine.clientsCount);
