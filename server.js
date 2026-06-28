@@ -1,4 +1,4 @@
-// server.js - Chatchi Server: Secure, Fast, and Personalized (SPA Architecture)
+// server.js - Chatchi Server: Secure, Fast, and Personalized (SPA Architecture - Fixed Routing)
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -30,13 +30,10 @@ app.get('/api/app-version', (req, res) => {
 // ==========================================
 // 3. نظام توجيه الصفحة الواحدة (SPA Routing)
 // ==========================================
-// أي مسار يطلبه المستخدم (الرئيسية، الشات، الخصوصية) سيوجهه السيرفر لملف index.html
+// توجيه المسارات الأساسية مباشرة لملف index.html لتجنب أخطاء path-to-regexp في خوادم Render
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/chat', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
-// في حال طلب المستخدم أي رابط غير موجود، أعده للرئيسية
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 const server = http.createServer(app);
 
@@ -247,6 +244,19 @@ io.on('connection', (socket) => {
         if (room) socket.to(room).emit('partnerAppStateChanged', data.state);
     });
 
+    socket.on('submitSuggestion', (suggestion) => {
+        const sanitized = suggestion.replace(/\s+/g, ' ').trim();
+        if (sanitized && sanitized.length < 500) {
+            const mailOptions = {
+                from: `"Chatchi Feedback" <${process.env.EMAIL_USER}>`,
+                to: process.env.EMAIL_USER,
+                subject: '🚀 اقتراح جديد من Chatchi',
+                text: `يا تاكاشي، وصلك اقتراح جديد:\n\n"${sanitized}"\n\nالوقت: ${new Date().toLocaleString('ar-DZ')}`
+            };
+            transporter.sendMail(mailOptions, (err) => { if (err) console.error('Email Error:', err); });
+        }
+    });
+
     socket.on('disconnect', () => {
         const room = activeRooms.get(socket.id);
         if (room) {
@@ -254,7 +264,9 @@ io.on('connection', (socket) => {
             roomMessages.delete(room);
         }
         activeRooms.delete(socket.id);
+
         removeUserFromAllQueues(socket.id);
+
         messageLimiter.delete(socket.id);
         messageHistory.delete(socket.id);
         io.emit('updateOnlineUsers', io.engine.clientsCount);
