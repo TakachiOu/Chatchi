@@ -1,4 +1,4 @@
-// server.js - Chatchi Server: Secure, Fast, and Personalized (Multi-Tag + GeoIP Flags)
+// server.js - Chatchi Server: Secure, Fast, and Personalized (SPA + Multi-Tag + GeoIP Flags)
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -13,15 +13,17 @@ app.use(cors());
 // ==========================================
 // 1. السماح بقراءة الملفات الثابتة
 // ==========================================
+// السيرفر الآن يقرأ الملفات مباشرة من مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // ==========================================
-// 2. الروابط الاحترافية
+// 2. نظام توجيه الصفحة الواحدة (SPA Routing)
 // ==========================================
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index', 'index.html')));
-app.get('/chat', (req, res) => res.sendFile(path.join(__dirname, 'public', 'chat', 'chat.html')));
-app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy', 'privacy.html')));
+// توجيه جميع المسارات إلى ملف index.html الموحد
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/chat', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 app.get('/api/app-version', (req, res) => {
     res.json({
