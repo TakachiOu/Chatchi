@@ -1,4 +1,4 @@
-// server.js - Chatchi Server: Secure, Fast, and Personalized (SPA + Multi-Tag + GeoIP Flags)
+// server.js - Chatchi Server: Secure, Fast, and Personalized (SPA Architecture)
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -11,20 +11,14 @@ const app = express();
 app.use(cors());
 
 // ==========================================
-// 1. السماح بقراءة الملفات الثابتة
+// 1. السماح بقراءة الملفات الثابتة من مجلد public
 // ==========================================
-// السيرفر الآن يقرأ الملفات مباشرة من مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // ==========================================
-// 2. نظام توجيه الصفحة الواحدة (SPA Routing)
+// 2. واجهة برمجة التطبيقات (API)
 // ==========================================
-// توجيه جميع المسارات إلى ملف index.html الموحد
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/chat', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
 app.get('/api/app-version', (req, res) => {
     res.json({
         latestVersion: "1.0.0",
@@ -33,10 +27,21 @@ app.get('/api/app-version', (req, res) => {
     });
 });
 
+// ==========================================
+// 3. نظام توجيه الصفحة الواحدة (SPA Routing)
+// ==========================================
+// أي مسار يطلبه المستخدم (الرئيسية، الشات، الخصوصية) سيوجهه السيرفر لملف index.html
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/chat', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+
+// في حال طلب المستخدم أي رابط غير موجود، أعده للرئيسية
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+
 const server = http.createServer(app);
 
 // ==========================================
-// 3. إعدادات Socket.io
+// 4. إعدادات Socket.io
 // ==========================================
 const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
@@ -75,7 +80,7 @@ function filterAndSanitize(text) {
 // نظام تحويل كود الدولة إلى علم إيموجي
 // ==========================================
 function getFlagEmoji(countryCode) {
-    if (!countryCode) return '🌍'; // علم افتراضي للكرة الأرضية إذا لم يتم التعرف على الدولة
+    if (!countryCode) return '🌍';
     const codePoints = countryCode
         .toUpperCase()
         .split('')
@@ -104,16 +109,14 @@ function removeUserFromAllQueues(socketId) {
 io.on('connection', (socket) => {
     io.emit('updateOnlineUsers', io.engine.clientsCount);
 
-    // ==========================================
-    // جلب الـ IP وتحويله إلى علم بمجرد الاتصال
-    // ==========================================
+    // جلب الـ IP وتحويله إلى علم
     let clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
     if (clientIp.includes('::ffff:')) {
         clientIp = clientIp.split('::ffff:')[1];
     }
     const geo = geoip.lookup(clientIp);
     const countryCode = geo ? geo.country : null;
-    socket.flag = getFlagEmoji(countryCode); // حفظ العلم في بيانات المتصل
+    socket.flag = getFlagEmoji(countryCode);
 
     // --- منطق البحث (Multi-Tag) ---
     socket.on('findPartner', (tags) => {
@@ -160,7 +163,6 @@ io.on('connection', (socket) => {
             activeRooms.set(socket.id, room);
             activeRooms.set(partnerSocketId, room);
 
-            // إرسال البيانات بالإضافة لعلم الطرف الآخر لكل مستخدم
             io.to(socket.id).emit('matchFound', { room: room, matchedTag: matchedTag, partnerFlag: partnerSocket.flag });
             io.to(partnerSocketId).emit('matchFound', { room: room, matchedTag: matchedTag, partnerFlag: socket.flag });
         } else {
@@ -245,19 +247,6 @@ io.on('connection', (socket) => {
         if (room) socket.to(room).emit('partnerAppStateChanged', data.state);
     });
 
-    socket.on('submitSuggestion', (suggestion) => {
-        const sanitized = suggestion.replace(/\s+/g, ' ').trim();
-        if (sanitized && sanitized.length < 500) {
-            const mailOptions = {
-                from: `"Chatchi Feedback" <${process.env.EMAIL_USER}>`,
-                to: process.env.EMAIL_USER,
-                subject: '🚀 اقتراح جديد من Chatchi',
-                text: `يا تاكاشي، وصلك اقتراح جديد:\n\n"${sanitized}"\n\nالوقت: ${new Date().toLocaleString('ar-DZ')}`
-            };
-            transporter.sendMail(mailOptions, (err) => { if (err) console.error('Email Error:', err); });
-        }
-    });
-
     socket.on('disconnect', () => {
         const room = activeRooms.get(socket.id);
         if (room) {
@@ -265,9 +254,7 @@ io.on('connection', (socket) => {
             roomMessages.delete(room);
         }
         activeRooms.delete(socket.id);
-
         removeUserFromAllQueues(socket.id);
-
         messageLimiter.delete(socket.id);
         messageHistory.delete(socket.id);
         io.emit('updateOnlineUsers', io.engine.clientsCount);
