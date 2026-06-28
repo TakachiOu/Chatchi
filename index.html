@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4748269863410868" crossorigin="anonymous"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+    
+    <title>Chatchi – دردشة عشوائية ومجهولة مع غرباء</title>
+    <meta name="title" content="Chatchi – دردشة عشوائية ومجهولة مع غرباء">
+    <link rel="canonical" href="https://chatchi-ik3p.onrender.com">
+    <meta name="description" content="ادخل عالم Chatchi وتحدث بحرية مع غرباء يشاركونك نفس الاهتمامات. دردشة نصية، مجهولة الهوية، وآمنة تماماً.">
+    <meta name="keywords" content="دردشة عشوائية, شات مجهول, Chatchi, دردشة مع غرباء, شات جزائري, تعارف مجهول">
+    <meta name="author" content="TaKaChi">
+
+    <meta name="robots" content="index, follow"> 
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://chatchi-ik3p.onrender.com/">
+    <meta property="og:site_name" content="Chatchi"> 
+    <meta property="og:title" content="Chatchi – دردشة عشوائية ومجهولة مع غرباء">
+    <meta property="og:description" content="مساحة آمنة للبوح وتبادل الأسرار مع أشخاص لا يعرفونك.">
+    <meta property="og:image" content="https://chatchi-ik3p.onrender.com/icon.png"> 
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Chatchi",
+      "alternateName": "شات تشي",
+      "url": "https://chatchi-ik3p.onrender.com/",
+      "description": "منصة للدردشة المجهولة والعشوائية، تتيح للمستخدمين التواصل بخصوصية تامة."
+    }
+    </script>
+    <meta name="google-site-verification" content="slNVwOa3GAp0dXRV9R_6iTIUMC7Nn6crM_j-BFq54BU" />
+</head>
+
+<body>
+
+    <div class="background-blurs">
+        <div class="blur-orb" id="orb1"></div>
+        <div class="blur-orb" id="orb2"></div>
+    </div>
+
+    <div id="force-update-overlay" class="update-overlay hidden">
+        <div class="update-card">
+            <div class="update-icon">
+                <i class="fa-solid fa-rocket-launch"></i>
+                <div class="icon-pulse"></div>
+            </div>
+            <h2 id="update-title" data-key="updateTitle">تحديث جديد متوفر!</h2>
+            <p id="update-text" data-key="updateText">أنت تستخدم نسخة قديمة من التطبيق. يرجى التحديث الآن من متجر بلاي للحصول على آخر التحسينات الأمنية والميزات الجديدة.</p>
+            <a href="#" id="update-link" class="update-btn">
+                <i class="fa-brands fa-google-play"></i>
+                <span data-key="updateBtn">تحديث الآن</span>
+            </a>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 data-key="confirmLeaveTitle">هل أنت متأكد؟</h3>
+            <p data-key="confirmLeaveText">هل تريد حقاً مغادرة المحادثة؟</p>
+            <div class="modal-buttons">
+                <button id="confirm-yes-btn" class="modal-btn yes-btn" data-key="confirmYes">نعم، غادر</button>
+                <button id="confirm-no-btn" class="modal-btn no-btn" data-key="confirmNo">لا، ابقَ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-home" class="app-view active">
+        <header class="home-header">
+            <div class="logo">Chat<span>chi</span></div>
+            <nav style="display: flex; gap: 10px; align-items: center;">
+                <button id="share-btn" class="lang-toggle-btn" title="شارك التطبيق">
+                    <i class="fa-solid fa-share-nodes"></i>
+                </button>
+                <button class="lang-toggle-btn lang-toggle" data-key="langToggle">English</button>
+            </nav>
+        </header>
+
+        <main class="container">
+            <div class="ad-area-top" style="text-align: center; margin-bottom: 20px;"></div>
+
+            <section class="hero">
+                <h1 class="main-title" data-key="mainTitle">ادخل الفراغ و تحدث مع المجهول</h1>
+                <p class="subtitle" data-key="subtitle">مرحباً بك في Chatchi.. مساحة للبوح وتبادل الأسرار بقلبٍ مطمئن. صُمم هذا الموقع ليكون متنفساً لكل من أثقلته الهموم، لكي يحكي مشاكله لمن لا يعرفه فيرتاح قلبه</p>
+                
+                <div class="tags-input-container">
+                    <div id="tags-area" class="tags-area"></div>
+                    <input type="text" id="tags-input" data-key="tagsPlaceholder" placeholder="اكتب tag للدخول إلى دردشة مع من كتب نفس الـtag">
+                </div>
+                
+                <button id="start-chat-btn" class="cta-button">
+                    <span data-key="ctaButton">ابحث عن شخص</span>
+                    <i class="fa-solid fa-angles-right"></i>
+                </button>
+            </section>
+
+            <section class="features-rules-section">
+                <div class="text-content-container">
+                    <div class="content-block">
+                        <h2 data-key="aboutTitle">ما هو Chatchi؟</h2>
+                        <p data-key="aboutText">هي منصة بسيطة ومساحة آمنة تتيح لك فرصة الدخول في محادثات نصية، عشوائية، ومجهولة الهوية تماماً.</p>
+                    </div>
+                    
+                    <div class="content-block">
+                        <h2 data-key="featuresTitle">أبرز مميزاتنا</h2>
+                        <ul class="features-list">
+                            <li data-key="feature1"><strong>هوية مجهولة بالكامل:</strong> لا نطلب أي معلومات شخصية.</li>
+                            <li data-key="feature2"><strong>محادثات سرية:</strong> كل الرسائل تُحذف للأبد بمجرد إنهاء المحادثة.</li>
+                            <li data-key="feature3"><strong>مطابقة ذكية:</strong> استعمل Tag إذا أحببت، وإن لم تجد أحدًا، يمكنك تغييره أو الدخول بدونه.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="content-block">
+                        <h2 data-key="rulesTitle">قواعد المنصة</h2>
+                        <ul class="rules-list">
+                            <li data-key="rule1">لضمان تواصلٍ ممتع ومستمر، يُرجى البقاء في غرفة الدردشة وعدم مغادرتها حتى لا تنقطع المحادثة بين الطرفين.</li>
+                            <li data-key="rule2">لتبقى هذه المساحة نقية، يُمنع منعاً باتاً السب، الشتم، أو استغلال المنصة فيما حرمه الله. اتقِ الله في قولك، فما تكتبه مسجلٌ في صحيفتك.</li>
+                            <li data-key="rule3">استمتع بتجربتك وكن سبباً في جعل تجربة الآخرين ممتعة.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="site-footer">
+            <div class="ad-area" style="text-align: center; margin-bottom: 20px;"></div>
+            
+            <div class="footer-bottom">
+                <div class="legal-links" style="margin-bottom: 15px;">
+                    <a href="#" id="link-to-privacy" data-key="privacyLink" style="color: var(--text-muted); text-decoration: none; font-weight: bold; transition: color 0.3s;">سياسة الخصوصية</a>
+                </div>
+
+                <p class="footer-copyright" data-key="copyright">© 2026 Chatchi. جميع الحقوق محفوظة.</p>
+                <p class="footer-credit" data-key="credit">صُنع بكل ❤️ بواسطة <a href="#" class="credit-link">TaKaChi</a></p>
+                
+                <div class="signature-badge">
+                    <span class="spark">★</span>
+                    TaKaChi <strong>Developer</strong>
+                    <span class="spark">★</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div id="view-chat" class="app-view hidden">
+        <div class="chat-container">
+            <div class="chat-header">
+                <p class="chat-status" data-key-status="statusInit">جارٍ تهيئة الاتصال...</p>
+                <button id="leave-home-button" title="العودة للرئيسية">
+                    <i class="fa-solid fa-person-walking-arrow-right"></i>
+                </button>
+            </div>
+            
+            <div class="messages-area"></div>
+            
+            <div id="emoji-picker-container" class="hidden-emoji">
+                <emoji-picker class="dark"></emoji-picker>
+            </div>
+
+            <div class="chat-input-area">
+                <button id="emoji-button" title="إدراج إيموجي" disabled>
+                    <i class="fa-regular fa-face-smile"></i>
+                </button>
+                
+                <button id="skip-button" title="تخطي والبحث عن غريب آخر" disabled>
+                    <i class="fa-solid fa-forward-step"></i>
+                </button>
+                
+                <input type="text" id="chat-input-field" data-key="chatPlaceholder" placeholder="اكتب رسالتك..." disabled autocomplete="off">
+                
+                <button id="send-button" data-key="chatSendBtn" disabled>إرسال</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-privacy" class="app-view hidden">
+        <header class="privacy-header">
+            <div class="logo">Chat<span>chi</span></div>
+            <nav class="header-nav">
+                <a href="#" id="link-to-home" class="nav-link-btn">
+                    <i class="fa-solid fa-house"></i>
+                    <span data-key="backHome">العودة إلى الصفحة الرئيسية</span>
+                </a>
+                <button class="lang-toggle-btn lang-toggle" data-key="langToggle">English</button>
+            </nav>
+        </header>
+
+        <main class="container">
+            <section class="policy-section">
+                <h1 class="page-title" data-key="pageTitle">سياسة الخصوصية</h1>
+                <p class="last-updated" data-key="lastUpdated">آخر تحديث: أبريل 2026</p>
+                
+                <div class="policy-content">
+                    <div class="policy-block">
+                        <h2 data-key="introTitle">مقدمة</h2>
+                        <p data-key="introText">مرحباً بك في Chatchi. نحن نؤمن بأن الخصوصية حق أساسي، ولذلك قمنا ببناء هذه المنصة لتكون مساحة آمنة ومجهولة تماماً للتواصل. تشرح هذه السياسة كيف نتعامل مع المعلومات عند استخدامك لموقعنا.</p>
+                    </div>
+
+                    <div class="policy-block">
+                        <h2 data-key="dataTitle">جمع البيانات والمعلومات الشخصية</h2>
+                        <p data-key="dataText">نحن لا نطلب، ولا نجمع، ولا نخزن أي معلومات شخصية عنك. لست بحاجة إلى إنشاء حساب، أو تقديم بريد إلكتروني، أو رقم هاتف لاستخدام Chatchi. هويتك تبقى مجهولة بالكامل.</p>
+                    </div>
+
+                    <div class="policy-block">
+                        <h2 data-key="chatTitle">محتوى المحادثات (الدردشة)</h2>
+                        <p data-key="chatText">تعمل منصتنا بنظام المراسلة اللحظية. بمجرد انتهاء المحادثة ومغادرتك للغرفة، يتم مسح جميع الرسائل فوراً وبشكل نهائي من خوادمنا. لا يوجد أي سجل (History) للمحادثات، ولا يمكن لأي طرف استرجاعها.</p>
+                    </div>
+
+                    <div class="policy-block">
+                        <h2 data-key="cookiesTitle">ملفات تعريف الارتباط (Cookies) والإعلانات</h2>
+                        <p data-key="cookiesText">نحن نستخدم خدمات جهات خارجية (مثل Google AdSense) لعرض الإعلانات. قد تستخدم هذه الجهات ملفات تعريف الارتباط (Cookies) لتقديم إعلانات مخصصة بناءً على زياراتك السابقة لهذا الموقع أو مواقع أخرى على الإنترنت. يمكنك إدارة تفضيلات الإعلانات الخاصة بك من خلال إعدادات حساب Google الخاص بك.</p>
+                    </div>
+
+                    <div class="policy-block">
+                        <h2 data-key="consentTitle">موافقتك</h2>
+                        <p data-key="consentText">باستخدامك لموقع Chatchi، فإنك توافق على سياسة الخصوصية الخاصة بنا الموضحة في هذه الصفحة.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-copyright" data-key="copyright">© 2026 Chatchi. جميع الحقوق محفوظة.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
