@@ -24,6 +24,18 @@ html, body {
     padding-top: env(safe-area-inset-top);
 }
 
+/* ============================================== */
+/* تطبيق الخط الإنجليزي العصري عند تغيير اللغة  */
+/* ============================================== */
+html[lang="en"] body,
+html[lang="en"] input,
+html[lang="en"] button,
+html[lang="en"] textarea,
+html[lang="en"] .main-title,
+html[lang="en"] .apk-title {
+    font-family: 'Outfit', sans-serif;
+}
+
 /* لمنع التمرير الكلي أثناء وجودك في غرفة الدردشة */
 body.in-chat {
     height: 100vh;
@@ -62,7 +74,7 @@ body.in-chat {
     display: flex; align-items: center; gap: 8px;
     background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color);
     color: var(--text-color); padding: 10px 20px; border-radius: 20px;
-    font-family: 'Tajawal', sans-serif; font-size: 1rem; font-weight: bold;
+    font-family: inherit; font-size: 1rem; font-weight: bold;
     cursor: pointer; text-decoration: none; transition: all 0.3s ease; backdrop-filter: blur(5px);
 }
 .lang-toggle-btn:hover, .nav-link-btn:hover {
@@ -87,39 +99,31 @@ body.in-chat {
 /* ============================================== */
 .hero { text-align: center; margin-bottom: 60px; }
 
-/* استرجاع العنوان للون الأبيض وسطر واحد */
+/* إصلاح التوسيط: إزالة nowrap التي كانت تسبب خروج النص عن الشاشة */
 .main-title { 
     font-size: clamp(2rem, 4.5vw, 3.5rem); 
     color: #ffffff; 
     margin-bottom: 20px; 
-    white-space: nowrap; 
 }
 
 .subtitle { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 40px; }
 
 .tags-input-container { max-width: 600px; margin: 0 auto 30px; background: rgba(27, 30, 47, 0.5); border: 1px solid var(--border-color); border-radius: 20px; padding: 15px; display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(10px); }
-#tags-input { background: transparent; border: none; color: var(--text-color); font-size: 1.1rem; padding: 10px; outline: none; width: 100%; font-family: 'Tajawal', sans-serif; }
+#tags-input { background: transparent; border: none; color: var(--text-color); font-size: 1.1rem; padding: 10px; outline: none; width: 100%; font-family: inherit; }
 #tags-input::placeholder { color: rgba(255,255,255,0.3); }
 .tags-area { display: flex; flex-wrap: wrap; gap: 10px; min-height: 0; }
 .tag-item { background: linear-gradient(135deg, rgba(138, 66, 255, 0.2), rgba(107, 33, 214, 0.2)); border: 1px solid var(--accent-color); color: white; padding: 8px 15px; border-radius: 15px; display: flex; align-items: center; gap: 8px; font-weight: bold; }
 .close-btn { cursor: pointer; color: #ff6b6b; font-weight: bold; font-size: 1.2rem; line-height: 1; transition: transform 0.2s; }
 .close-btn:hover { transform: scale(1.2); }
 
-.cta-button { background: linear-gradient(135deg, var(--accent-color), var(--accent-dark)); border: none; color: white; font-family: 'Tajawal', sans-serif; font-size: 1.3rem; font-weight: bold; padding: 15px 40px; border-radius: 30px; cursor: pointer; box-shadow: 0 10px 30px rgba(138, 66, 255, 0.4); display: flex; align-items: center; gap: 15px; margin: 0 auto; transition: transform 0.3s; }
+.cta-button { background: linear-gradient(135deg, var(--accent-color), var(--accent-dark)); border: none; color: white; font-family: inherit; font-size: 1.3rem; font-weight: bold; padding: 15px 40px; border-radius: 30px; cursor: pointer; box-shadow: 0 10px 30px rgba(138, 66, 255, 0.4); display: flex; align-items: center; gap: 15px; margin: 0 auto; transition: transform 0.3s; }
 .cta-button:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(138, 66, 255, 0.6); }
 
-/* استرجاع المميزات والقواعد لأسلوب النص العادي بدون بطاقات */
 .features-rules-section { text-align: right; margin-top: 40px;}
 html[dir="ltr"] .features-rules-section { text-align: left; }
 .text-content-container { display: flex; flex-direction: column; gap: 40px; max-width: 800px; margin: 0 auto; }
 
-.content-block { 
-    background: transparent; 
-    backdrop-filter: none; 
-    border: none; 
-    padding: 0; 
-    box-shadow: none; 
-}
+.content-block { background: transparent; backdrop-filter: none; border: none; padding: 0; box-shadow: none; }
 .content-block h2 { font-size: 1.8rem; color: #ffffff; margin-bottom: 15px; display: block; }
 .content-block p, .content-block li { color: var(--text-muted); font-size: 1.1rem; line-height: 1.8; }
 
@@ -129,6 +133,99 @@ html[dir="ltr"] .features-list li, html[dir="ltr"] .rules-list li { padding-righ
 .features-list li::before, .rules-list li::before { content: '•'; color: var(--accent-color); font-size: 1.5rem; position: absolute; right: 0; top: -5px; }
 html[dir="ltr"] .features-list li::before, html[dir="ltr"] .rules-list li::before { right: auto; left: 0; }
 
+/* ============================================== */
+/* تصميم زر تحميل التطبيق الاحترافي (APK Download) */
+/* ============================================== */
+.download-app-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    padding: 0 20px;
+}
+
+.apk-download-btn {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(27, 30, 47, 0.6);
+    border: 1px solid rgba(138, 66, 255, 0.3);
+    padding: 12px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    color: white;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 450px;
+}
+
+.apk-download-btn:hover {
+    transform: translateY(-5px);
+    background: rgba(138, 66, 255, 0.15);
+    border-color: var(--accent-color);
+    box-shadow: 0 15px 40px rgba(138, 66, 255, 0.4);
+}
+
+.apk-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 15px rgba(138, 66, 255, 0.4);
+    flex-shrink: 0;
+    padding: 6px;
+    background: rgba(138, 66, 255, 0.1);
+}
+
+.apk-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.apk-text {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    text-align: right;
+}
+
+html[dir="ltr"] .apk-text {
+    text-align: left;
+}
+
+.apk-title {
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.apk-size {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.download-icon-arrow {
+    font-size: 1.4rem;
+    color: var(--accent-color);
+    animation: bounceDown 2s infinite;
+}
+
+@keyframes bounceDown {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(5px); }
+    60% { transform: translateY(3px); }
+}
+
+/* ============================================== */
+/* تذييل الصفحة (Footer)                        */
+/* ============================================== */
 .site-footer { text-align: center; padding: 30px 20px; border-top: 1px solid var(--border-color); background: rgba(13, 15, 24, 0.8); }
 .footer-copyright { color: var(--text-muted); }
 .footer-credit { color: var(--text-muted); margin-top: 5px; font-size: 0.9rem; }
@@ -180,10 +277,10 @@ emoji-picker { width: 100%; height: 100%; --background: var(--primary-color); --
 #skip-button.confirm-skip { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #e74c3c; animation: pulseWarning 1s infinite; }
 @keyframes pulseWarning { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
-.chat-input-area input { flex-grow: 1; min-width: 0; background-color: rgba(13, 15, 24, 0.8); border: 1px solid rgba(138, 66, 255, 0.3); border-radius: 15px; color: var(--text-color); padding: 15px; font-size: 1.1rem; text-align: right; height: 54px; }
+.chat-input-area input { flex-grow: 1; min-width: 0; background-color: rgba(13, 15, 24, 0.8); border: 1px solid rgba(138, 66, 255, 0.3); border-radius: 15px; color: var(--text-color); padding: 15px; font-size: 1.1rem; text-align: right; height: 54px; font-family: inherit; }
 .chat-input-area input:focus { border-color: var(--accent-color); box-shadow: 0 0 10px rgba(138, 66, 255, 0.2); outline: none; }
 html[dir="ltr"] .chat-input-area input { text-align: left; }
-.chat-input-area button#send-button { background: linear-gradient(135deg, var(--accent-color), var(--accent-dark)); border: none; color: white; font-weight: bold; border-radius: 15px; padding: 0 30px; cursor: pointer; flex-shrink: 0; height: 54px; box-shadow: 0 4px 15px rgba(138, 66, 255, 0.3); }
+.chat-input-area button#send-button { background: linear-gradient(135deg, var(--accent-color), var(--accent-dark)); border: none; color: white; font-weight: bold; border-radius: 15px; padding: 0 30px; cursor: pointer; flex-shrink: 0; height: 54px; box-shadow: 0 4px 15px rgba(138, 66, 255, 0.3); font-family: inherit; }
 .chat-input-area button#send-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(138, 66, 255, 0.5); }
 .chat-input-area button#send-button:disabled { background: #3a3f51; box-shadow: none; cursor: not-allowed; transform: none; color: #818896;}
 
@@ -193,7 +290,7 @@ html[dir="ltr"] .chat-input-area input { text-align: left; }
 .modal-content h3 { margin-top: 0; color: #ffffff; font-size: 1.5em; margin-bottom: 10px;}
 .modal-content p { color: #b9bbbe; margin-bottom: 25px; line-height: 1.5;}
 .modal-buttons { display: flex; justify-content: space-around; gap: 15px; }
-.modal-btn { padding: 12px 20px; border: none; border-radius: 12px; font-size: 1em; font-weight: bold; cursor: pointer; flex-grow: 1; }
+.modal-btn { padding: 12px 20px; border: none; border-radius: 12px; font-size: 1em; font-weight: bold; cursor: pointer; flex-grow: 1; font-family: inherit; }
 .yes-btn { background-color: rgba(217, 83, 79, 0.2); color: #ff6b6b; border: 1px solid #ff6b6b; }
 .yes-btn:hover { background-color: #ff6b6b; color: white; }
 .no-btn { background-color: rgba(92, 184, 92, 0.2); color: #5cb85c; border: 1px solid #5cb85c;}
@@ -205,7 +302,6 @@ html[dir="ltr"] .chat-input-area input { text-align: left; }
 .page-title { font-size: 3rem; text-align: center; margin-bottom: 5px; background: linear-gradient(to right, #fff, var(--accent-color)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: var(--accent-color); }
 .last-updated { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 50px; }
 
-/* هنا نحافظ على شكل البطاقات لأنها كانت موجودة في كود الخصوصية الذي أرسلته سابقاً */
 .policy-block {
     background: rgba(27, 30, 47, 0.5);
     backdrop-filter: blur(12px);
@@ -233,7 +329,6 @@ html[dir="ltr"] .policy-block h2::after { right: auto; left: 0; }
     .home-header, .privacy-header { padding: 15px 5%; justify-content: center; flex-direction: column; }
     .header-nav { width: 100%; justify-content: space-between; margin-top: 10px; }
     .container { padding: 30px 5%; }
-    /* السماح للعنوان بالنزول لسطرين في الجوال فقط حتى لا يخرج عن الشاشة */
     .page-title, .main-title { font-size: 2.2rem; white-space: normal; } 
     .chat-container { width: 100%; border-radius: 0; border: none; }
 }
@@ -253,4 +348,8 @@ html[dir="ltr"] .policy-block h2::after { right: auto; left: 0; }
     
     #emoji-picker-container { width: 100%; max-width: 100%; right: 0; left: 0; bottom: 72px; border-radius: 20px 20px 0 0; border-left: none; border-right: none; }
     html[dir="ltr"] #emoji-picker-container { left: 0; right: 0; }
+    
+    .apk-download-btn { padding: 10px 15px; }
+    .apk-icon { width: 45px; height: 45px; font-size: 1.8rem; }
+    .apk-title { font-size: 1rem; }
 }

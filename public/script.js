@@ -10,13 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('view-' + viewId).classList.add('active');
         window.scrollTo(0, 0);
 
-        // إذا دخل لغرفة الشات
         if (viewId === 'chat') {
             document.body.classList.add('in-chat');
             startSearching(); 
         } else {
             document.body.classList.remove('in-chat');
-            // إذا خرج من الشات، يجب قطع الاتصال أو إلغاء البحث
             if (currentRoom) {
                 socket.emit('leaveRoom', currentRoom);
                 currentRoom = '';
@@ -37,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const DOM = {
-        // عام
         langToggleBtns: document.querySelectorAll('.lang-toggle'),
         shareBtn: document.getElementById('share-btn'),
         updateOverlay: document.getElementById('force-update-overlay'),
@@ -45,12 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
         linkToPrivacy: document.getElementById('link-to-privacy'),
         linkToHome: document.getElementById('link-to-home'),
         
-        // الرئيسية
         tagsInput: document.getElementById('tags-input'),
         tagsArea: document.getElementById('tags-area'),
         startChatBtn: document.getElementById('start-chat-btn'),
         
-        // الشات
         chatStatus: document.querySelector('.chat-status'),
         messagesArea: document.querySelector('.messages-area'),
         inputField: document.getElementById('chat-input-field'),
@@ -101,6 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
             rule1: 'لضمان تواصلٍ ممتع ومستمر، يُرجى البقاء في غرفة الدردشة وعدم مغادرتها حتى لا تنقطع المحادثة بين الطرفين.',
             rule2: 'لتبقى هذه المساحة نقية، يُمنع منعاً باتاً السب، الشتم، أو استغلال المنصة فيما حرمه الله. اتقِ الله في قولك، فما تكتبه مسجلٌ في صحيفتك.',
             rule3: 'استمتع بتجربتك وكن سبباً في جعل تجربة الآخرين ممتعة.',
+            downloadAppTitle: 'تحميل تطبيق Chatchi',
+            downloadAppSize: 'Android APK • 10.1 MB',
             privacyLink: 'سياسة الخصوصية',
             copyright: '© 2026 Chatchi. جميع الحقوق محفوظة.',
             credit: 'صُنع بكل ❤️ بواسطة <a href="#" class="credit-link">TaKaChi</a>',
@@ -153,6 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
             rule1: 'To ensure an enjoyable and continuous conversation, please remain in the chat room.',
             rule2: 'No profanity allowed. Every word is recorded in your deeds.',
             rule3: 'Enjoy and be kind.',
+            downloadAppTitle: 'Download Chatchi App',
+            downloadAppSize: 'Android APK • 10.1 MB',
             privacyLink: 'Privacy Policy',
             copyright: '© 2026 Chatchi. All rights reserved.',
             credit: 'Made with ❤️ by <a href="#" class="credit-link">TaKaChi</a>',
@@ -269,7 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
         switchView('home'); 
     };
 
-    // مشاركة
     if (DOM.shareBtn) {
         DOM.shareBtn.onclick = async () => {
             const shareTitle = currentLang === 'ar' ? 'دردش مع المجهول في Chatchi' : 'Chat anonymously on Chatchi';
@@ -467,7 +465,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }); 
     }
 
-    // التشغيل الأولي
     applyTranslations();
     setupHybridAds();
     checkUpdate();
