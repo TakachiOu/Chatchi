@@ -73,6 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastSentMessage = '';
     let lastSentTime = 0;
 
+    const forbiddenWords = [
+    'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','كس',
+    'fack', 'زك','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' ,
+    '9hba','no9ch','sowa' ,'3atay','zwayz','zamal' ,'nhatchoun'
+    ];
     const forbiddenRegex = new RegExp(forbiddenWords.join('|'), 'gi');
 
     // ==========================================

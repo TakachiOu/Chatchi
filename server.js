@@ -58,7 +58,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const forbiddenWords = [
-    'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','بنوتي', 'كس',
+    'زب', 'نيك', 'حتشون', 'قحب', 'نقش', 'ترمة', 'سوة','قحبة','كس',
     'fack', 'زك','شرموطة', 'عطاي', 'منيوك', 'شرموط', 'fuck' , 'nik', 'zbi' ,
     '9hba','no9ch','sowa' ,'3atay','zwayz','zamal' ,'nhatchoun'
 ];
